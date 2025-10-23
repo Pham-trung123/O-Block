@@ -1,0 +1,137 @@
+
+    /* Toàn trang */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+    background: #f5f7fb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    }
+
+    /* Hộp đăng ký */
+    .register-container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      width: 400px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tiêu đề */
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2b2d42;
+      font-weight: 700;
+    }
+
+    /* Nhóm input */
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #6200ff;
+      box-shadow: 0 0 5px rgba(98, 0, 255, 0.3);
+    }
+
+    /* Mã xác thực */
+    .captcha-box {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .captcha-code {
+      background: linear-gradient(90deg, #0061ff, #6100ff);
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      width: 100%;
+      font-weight: bold;
+      letter-spacing: 3px;
+      font-size: 18px;
+      user-select: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .refresh-btn {
+      background: linear-gradient(90deg, #0061ff, #6100ff);
+      color: white;
+      border: none;
+      margin-left: 10px;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: 0.3s;
+    }
+
+    .refresh-btn:hover {
+      transform: rotate(90deg);
+    }
+
+    /* Nút đăng ký */
+    .register-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(90deg, #0061ff, #6100ff);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(97, 0, 255, 0.3);
+    }
+
+    .register-btn:hover {
+      opacity: 0.95;
+      transform: scale(1.02);
+    }
+
+    /* Liên kết đăng nhập */
+    .link {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .link a {
+      color: #0061ff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .link a:hover {
+      color: #6100ff;
+    }
