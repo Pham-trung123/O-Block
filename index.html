@@ -9,25 +9,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
     <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>SecureMail</span>
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="#"><i class="fas fa-home"></i> Trang chủ</a></li>
-                        <li><a href="#"><i class="fas fa-search"></i> Kiểm tra Email</a></li>
-                        <li><a href="#"><i class="fas fa-database"></i> Cơ sở dữ liệu</a></li>
-                        <li><a href="#"><i class="fas fa-chart-line"></i> Phân tích</a></li>
-                        <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
+  <div class="header-container">
+    <!-- Logo -->
+    <div class="logo">
+      <i class="fas fa-shield-alt"></i>
+      <span>SecureMail</span>
+    </div>
+    <!-- Right Side -->
+    <div class="header-right">
+      <!-- Nút đăng nhập / đăng ký -->
+      <div class="auth-buttons">
+        <a href="../login/login.html" class="btn-login">Đăng nhập</a>
+        <a href="../register/register.html" class="btn-register">Đăng ký</a>
+      </div>
+    </div>
+  </div>
+</header>
 
     <div class="container">
         <section class="hero">
@@ -179,6 +178,55 @@ Ngân hàng Ví dụ</textarea>
             </div>
         </section>
     </div>
+<!-- === Nút Trợ lý AI === -->
+<button class="ai-assistant" id="aiBtn" title="Trợ lý AI">
+  <i class="fas fa-robot"></i>
+</button>
+
+<script>
+  // Khi bấm vào nút mở trang Trợ lý AI
+  document.getElementById("aiBtn").addEventListener("click", function() {
+    window.location.href = "../AI-Assistant/ai-assistant.html";
+  });
+</script>
+
+<style>
+  /* === Nút Trợ lý AI === */
+  .ai-assistant {
+    position: fixed;
+    bottom: 30px;       /* cách đáy 30px */
+    right: 30px;        /* cách phải 30px */
+    background: linear-gradient(135deg, #0099ff, #00d4ff);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    font-size: 32px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+
+  .ai-assistant:hover {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, #0078ff, #00b8d9);
+    box-shadow: 0 10px 25px rgba(0, 119, 255, 0.4);
+  }
+
+  /* Hiệu ứng "thở" cho icon robot 🤖 */
+  .ai-assistant i {
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.85; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+</style>
+
 
     <footer>
         <div class="container">
@@ -410,6 +458,24 @@ Ngân hàng Ví dụ</textarea>
                 }, 2000);
             });
         });
+const secureToggle = document.getElementById('secureToggle');
+const body = document.body;
+
+secureToggle.addEventListener('click', () => {
+  secureToggle.classList.toggle('active');
+  body.classList.toggle('secure-mode');
+});
+
+// Hiệu ứng scan
+const scanBtn = document.getElementById('scanBtn');
+scanBtn.addEventListener('click', () => {
+  scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang quét...';
+  setTimeout(() => {
+    scanBtn.innerHTML = '<i class="fas fa-check-circle"></i> An toàn!';
+    scanBtn.style.background = '#16a34a';
+    scanBtn.style.color = '#fff';
+  }, 2000);
+});
     </script>
 </body>
 </html>
