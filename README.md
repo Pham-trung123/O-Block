@@ -1,107 +1,108 @@
-# 🎓 Hệ thống Học tập Trực tuyến Dựa trên Mô hình Zero Trust
+# 🛡️ Phish Hunters Application – Phishing Email Detection and Alert System
 
-**Được phát triển bởi nhóm ZTATeam6 — An toàn. Có khả năng mở rộng. Thông minh.**
 
----
-
-## 🧩 Tổng quan
-
-Dự án triển khai **Mô hình Truy cập Zero Trust (ZTNA)** cho nền tảng học tập trực tuyến, đảm bảo **mọi người dùng, thiết bị và dịch vụ đều không được mặc định tin cậy**.  
-Mỗi yêu cầu truy cập đều được **xác thực, ủy quyền và giám sát liên tục** trước khi được cấp quyền.
-
-Hệ thống cung cấp:
-- Kiểm soát truy cập phân cấp theo vai trò  
-- Giám sát hoạt động thời gian thực  
-- Phân tích bảo mật tự động  
-→ Mang đến một môi trường học tập thông minh, an toàn và tuân thủ nguyên tắc bảo mật hiện đại.
+**Developed by O-Block Team — Secure. Fast. Intelligent.**
 
 ---
 
-## 🚀 Tính năng chính
+## 🧭 Overview
 
-- 🔐 **Xác thực Zero Trust:** Mọi yêu cầu truy cập được xác minh bằng **JWT / OAuth2**
-- 👥 **Quản lý vai trò & phân cấp:** Từ **Học viên → Giảng viên → Trưởng nhóm → Quản trị viên**
-- 🧑‍🏫 **Quản lý khóa học & nội dung:** Tải lên, chỉnh sửa, và quản trị tài liệu học tập
-- 📊 **Bảng điều khiển thời gian thực:** Theo dõi người dùng, phiên, và hoạt động
-- 🕵️ **Nhật ký và kiểm tra:** Ghi lại mọi hành động người dùng và sự kiện hệ thống
-- ⚠️ **Phát hiện bất thường:** Nhận diện IP lạ, hành vi đăng nhập nghi vấn
-- 📡 **API an toàn:** Bảo vệ bằng **HTTPS, WAF**, và giới hạn tốc độ truy cập
-- 🔧 **Công cụ quản trị:** Quản lý người dùng, chỉ định vai trò, xem hiệu suất hệ thống
+This project implements the Phish Hunters Web Application, a cybersecurity system designed to detect and alert users about phishing emails using Artificial Intelligence (AI) and Natural Language Processing (NLP) technologies.
+The main goal of the system is to help users identify malicious or deceptive emails, prevent data theft, and enhance cybersecurity awareness.
+
+Phish Hunters enables users to analyze email content, detect suspicious links, and receive real-time alerts about potential phishing threats.
+The system is developed using C# (ASP.NET) with a Firebase database and a modern, responsive web interface, ensuring security, efficiency, and scalability in real-world deployment.
 
 ---
 
-## 🧱 Kiến trúc Zero Trust
+## 🚀 Key Features
 
-### 🔑 Nguyên tắc bảo mật cốt lõi
-- **Không bao giờ tin tưởng, luôn xác minh**  
-  → Mọi truy cập đều phải qua xác thực và kiểm tra định danh.
-- **Quyền truy cập ít đặc quyền nhất**  
-  → Người dùng chỉ có quyền đúng với vai trò.
-- **Phân đoạn vi mô (Micro-segmentation)**  
-  → Tách biệt tài nguyên theo vùng bảo mật.
-- **Giám sát liên tục**  
-  → Ghi log, phân tích và cảnh báo hoạt động bất thường theo thời gian thực.
+-📧 **Phishing Email Detection** – Analyze subject lines, content, links, and sender information to identify risks.
+-🤖 **AI/NLP-based Analysis** – Use machine learning models to understand context and detect subtle phishing indicators.
+-🔔 **Real-time Alerts** – Instantly notify users when a suspicious email is detected.
+-🔐 **Data Security** – Implement user authentication, data encryption, and secure Firebase integration.
+-📊 **Admin Dashboard** – Monitor detection statistics, view activity logs, and generate security reports.
+-🧩 **User-friendly Interface** – Clean, responsive design optimized for both desktop and mobile users.
 
 ---
 
-## 🧠 Mô hình hệ thống
+## 🧩System Architecture – Phish Hunters Application
+
+### 🔐 Core Functional Principles
+
+**Threat Detection using AI/NLP** – Automatically analyze email text and metadata to identify phishing indicators.
+
+**Real-time Alerting** – Provide immediate warning notifications to users when phishing content is detected.
+
+**Secure Authentication** – Protect user access with JWT-based authentication and encrypted communication.
+
+**Data Integrity & Privacy** – Store analyzed results securely in Firebase with strict access control.
+
+**Continuous Monitoring** – Track user activity, detection logs, and system health in real time.
 
 
 ---
 
-## 🧰 Công nghệ Stack
+## 🧠 System Model
 
-| Thành phần | Công nghệ sử dụng |
-|-------------|-------------------|
-| **Giao diện người dùng** | React (Vite) |
-| **Backend / API** | Node.js (Express) |
-| **Cơ sở dữ liệu** | MongoDB |
-| **Xác thực & Ủy quyền** | JWT / OAuth2 |
-| **DevOps / CI-CD** | GitHub Actions |
-| **Bảo mật** | HTTPS, MFA, WAF, Role-based Access |
+| 🧑‍💻 Client Layer |
+| (Web Browser / User Interface) |
+|--------------------------------|
+|  - Email submission and scan request |
+|  - Real-time phishing alert display  |
+|--------------------------------|
+           ⬇
+        HTTPS / REST API
+           ⬇
+| ⚙️ Backend Layer |
+| (C# ASP.NET Core) |
+|--------------------------------|
+|  - Handles email analysis requests |
+|  - Integrates AI/NLP detection module |
+|  - Generates and stores alert data   |
+|--------------------------------|
+           ⬇
+| ☁️ Database Layer |
+| (Firebase Realtime / Firestore DB) |
+|--------------------------------|
+|  - Stores user profiles & scan history |
+|  - Maintains phishing pattern dataset  |
+|--------------------------------|
+
+
 
 ---
 
-## ⚙️ Cài đặt & Thiết lập
-┌─────────────────────────────┐
-│ 🧑‍💻 Client Layer │
-│ (Web Browser / Mobile App) │
-└──────────────┬──────────────┘
-│ HTTPS / REST API
-▼
-┌─────────────────────────────┐
-│ 🚪 API Gateway / Auth Service │
-│ - Xác thực & cấp token (JWT/OAuth2) │
-│ - Áp dụng chính sách Zero Trust │
-│ - Kiểm tra và chuyển tiếp yêu cầu hợp lệ │
-└──────────────┬──────────────┘
-│ Secure Internal Channel
-▼
-┌─────────────────────────────┐
-│ ⚙️ Service Layer (Business Logic) │
-│ - Xử lý nghiệp vụ học tập │
-│ - Áp dụng RBAC & Validation │
-│ - Kết nối database qua channel an toàn │
-└──────────────┬──────────────┘
-│ SQL / NoSQL + Audit Logs
-▼
-┌─────────────────────────────┐
-│ 🗄️ Data & Monitoring Layer │
-│ - Database (MongoDB / MySQL) │
-│ - Audit Logs & Event Records │
-│ - Monitoring (Grafana / ELK) │
-└─────────────────────────────┘
+## 🛡️ Security Highlights
 
-### 1️⃣ Yêu cầu hệ thống
-- Node.js ≥ 18  
-- MongoDB ≥ 6.0  
-- (Tùy chọn) Java ≥ 17 nếu triển khai backend song song bằng Spring Boot  
+-**HTTPS Enforcement** – All API communications are encrypted.
 
-### 2️⃣ Cài đặt
-```bash
-# Clone dự án
-git clone https://github.com/<username>/ZT-Learning-System.git
-cd ZT-Learning-System
+-**JWT Authentication** – Verifies users before allowing access to the system.
 
-# Cài đặt dependencies
-npm install
+-**Input Validation & Sanitization** – Prevents malicious data injection.
+
+-**Role-Based Access Control (RBAC)** – Separates user, admin, and system privileges.
+
+-**Audit Logs** – Tracks phishing detection events and user actions for traceability.
+
+---
+
+## 🧰 Tech Stack
+| **Component**            | **Technology**                                           |
+| ------------------------ | -------------------------------------------------------- |
+| **Frontend**             | HTML, CSS, JavaScript (Responsive Web UI)                |
+| **Backend**              | ava                                |
+| **Database**             | Firebase Realtime Database / Firestore                   |
+| **Authentication**       | JWT Token Authentication                                 |
+| **AI/NLP Engine**        | Python-based NLP Model (Phishing Detection)              |
+| **Hosting / Deployment** | IIS Server / Firebase Hosting                            |
+| **Version Control**      | GitHub                                                   |
+| **Security Protocols**   | HTTPS, Data Encryption, Role-Based Access Control (RBAC) |
+
+### ⚙️ Installation & Setup
+.NET SDK ≥ 8.0
+Visual Studio 2022 or later
+Firebase account (Realtime Database or Firestore enabled)
+Python ≥ 3.9 (for AI/NLP module integration)
+
+---
