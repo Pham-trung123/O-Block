@@ -5,451 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureMail - Hệ Thống Phát Hiện Email Lừa Đảo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        :root {
-            --primary: #1a73e8;
-            --secondary: #6c14d0;
-            --danger: #e53935;
-            --warning: #ffb300;
-            --success: #43a047;
-            --light: #f5f7fa;
-            --dark: #333;
-            --gray: #777;
-        }
-        
-        body {
-            background-color: var(--light);
-            color: var(--dark);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            font-weight: 700;
-        }
-        
-        .logo i {
-            font-size: 28px;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 25px;
-        }
-        
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            padding: 5px 10px;
-            border-radius: 4px;
-        }
-        
-        nav a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        .hero {
-            background: white;
-            border-radius: 10px;
-            padding: 40px;
-            margin: 30px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-        
-        .hero p {
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin-bottom: 30px;
-            color: var(--gray);
-        }
-        
-        .checker-container {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            margin: 20px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .checker-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .checker-header h2 {
-            color: var(--primary);
-        }
-        
-        .checker-tabs {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .tab {
-            padding: 8px 16px;
-            background: #f0f4f8;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .tab.active {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .email-input {
-            width: 100%;
-            min-height: 200px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            resize: vertical;
-        }
-        
-        .analyze-btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 0 auto;
-        }
-        
-        .analyze-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.4);
-        }
-        
-        .results {
-            margin-top: 30px;
-            display: none;
-        }
-        
-        .result-card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            border-left: 5px solid var(--primary);
-        }
-        
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .risk-level {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        
-        .risk-low {
-            background: #e6f4ea;
-            color: var(--success);
-        }
-        
-        .risk-medium {
-            background: #fef7e0;
-            color: var(--warning);
-        }
-        
-        .risk-high {
-            background: #fce8e6;
-            color: var(--danger);
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .feature-card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            font-size: 40px;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        
-        .feature-card h3 {
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 40px 0;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-        
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .dashboard-card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .dashboard-card h3 {
-            margin-bottom: 20px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .chart-container {
-            height: 300px;
-            position: relative;
-        }
-        
-        .training-section {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            margin: 30px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .training-section h2 {
-            color: var(--primary);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .training-controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .training-btn {
-            padding: 10px 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .training-btn:hover {
-            background: var(--secondary);
-        }
-        
-        .training-progress {
-            height: 10px;
-            background: #f0f4f8;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-        
-        .training-status {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        footer {
-            background: #1a1a2e;
-            color: white;
-            padding: 40px 0;
-            margin-top: 50px;
-        }
-        
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 30px;
-        }
-        
-        .footer-section {
-            flex: 1;
-            min-width: 250px;
-        }
-        
-        .footer-section h3 {
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-        }
-        
-        .footer-section ul {
-            list-style: none;
-        }
-        
-        .footer-section ul li {
-            margin-bottom: 10px;
-        }
-        
-        .footer-section a {
-            color: #ddd;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-section a:hover {
-            color: var(--primary);
-        }
-        
-        .copyright {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #333;
-            color: #aaa;
-        }
-        
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            nav ul {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-            
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
 </head>
 <body>
+
     <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>SecureMail</span>
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="#"><i class="fas fa-home"></i> Trang chủ</a></li>
-                        <li><a href="#"><i class="fas fa-search"></i> Kiểm tra Email</a></li>
-                        <li><a href="#"><i class="fas fa-database"></i> Cơ sở dữ liệu</a></li>
-                        <li><a href="#"><i class="fas fa-chart-line"></i> Phân tích</a></li>
-                        <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
+  <div class="header-container">
+    <!-- Logo -->
+    <div class="logo">
+      <i class="fas fa-shield-alt"></i>
+      <span>SecureMail</span>
+    </div>
+    <!-- Right Side -->
+    <div class="header-right">
+      <!-- Nút đăng nhập / đăng ký -->
+      <div class="auth-buttons">
+        <a href="../login/login.html" class="btn-login">Đăng nhập</a>
+        <a href="../register/register.html" class="btn-register">Đăng ký</a>
+      </div>
+    </div>
+  </div>
+</header>
 
     <div class="container">
         <section class="hero">
@@ -527,31 +104,7 @@ Ngân hàng Ví dụ</textarea>
             </div>
         </section>
         
-        <section class="training-section">
-            <h2><i class="fas fa-robot"></i> Huấn Luyện Mô Hình AI</h2>
-            <div class="training-controls">
-                <button class="training-btn" id="trainModel">
-                    <i class="fas fa-play"></i> Huấn Luyện Mô Hình
-                </button>
-                <button class="training-btn" id="addData">
-                    <i class="fas fa-plus"></i> Thêm Dữ Liệu Huấn Luyện
-                </button>
-                <button class="training-btn" id="evaluateModel">
-                    <i class="fas fa-chart-bar"></i> Đánh Giá Mô Hình
-                </button>
-            </div>
-            
-            <div class="training-status">
-                <span>Trạng thái: <span id="trainingStatus">Sẵn sàng</span></span>
-                <span>Dữ liệu huấn luyện: <span id="trainingData">12,547 mẫu</span></span>
-            </div>
-            
-            <div class="training-progress">
-                <div class="progress-bar" id="trainingProgress"></div>
-            </div>
-            
-            <div id="trainingResults"></div>
-        </section>
+        <!-- ĐÃ XÓA PHẦN HUẤN LUYỆN AI -->
         
         <section class="features">
             <div class="feature-card">
@@ -601,6 +154,55 @@ Ngân hàng Ví dụ</textarea>
             </div>
         </section>
     </div>
+<!-- === Nút Trợ lý AI === -->
+<button class="ai-assistant" id="aiBtn" title="Trợ lý AI">
+  <i class="fas fa-robot"></i>
+</button>
+
+<script>
+  // Khi bấm vào nút mở trang Trợ lý AI
+  document.getElementById("aiBtn").addEventListener("click", function() {
+    window.location.href = "../AI-Assistant/ai-assistant.html";
+  });
+</script>
+
+<style>
+  /* === Nút Trợ lý AI === */
+  .ai-assistant {
+    position: fixed;
+    bottom: 30px;       /* cách đáy 30px */
+    right: 30px;        /* cách phải 30px */
+    background: linear-gradient(135deg, #0099ff, #00d4ff);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    font-size: 32px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+
+  .ai-assistant:hover {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, #0078ff, #00b8d9);
+    box-shadow: 0 10px 25px rgba(0, 119, 255, 0.4);
+  }
+
+  /* Hiệu ứng "thở" cho icon robot 🤖 */
+  .ai-assistant i {
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.85; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+</style>
+
 
     <footer>
         <div class="container">
@@ -750,86 +352,6 @@ Ngân hàng Ví dụ</textarea>
                     tabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                 });
-            });
-            
-            // Training functionality
-            const trainModelBtn = document.getElementById('trainModel');
-            const addDataBtn = document.getElementById('addData');
-            const evaluateModelBtn = document.getElementById('evaluateModel');
-            const trainingProgress = document.getElementById('trainingProgress');
-            const trainingStatus = document.getElementById('trainingStatus');
-            const trainingResults = document.getElementById('trainingResults');
-            
-            trainModelBtn.addEventListener('click', function() {
-                trainingStatus.textContent = "Đang huấn luyện...";
-                trainingResults.innerHTML = "";
-                
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 5;
-                    trainingProgress.style.width = progress + "%";
-                    
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        trainingStatus.textContent = "Huấn luyện hoàn tất";
-                        trainingResults.innerHTML = `
-                            <div class="result-card">
-                                <div class="result-header">
-                                    <h3>Kết Quả Huấn Luyện</h3>
-                                    <div class="risk-level risk-low">Thành Công</div>
-                                </div>
-                                <p><strong>Mô hình mới đã được huấn luyện thành công với 12,547 mẫu dữ liệu.</strong></p>
-                                <p><strong>Độ chính xác:</strong> 98.7% (tăng 0.3% so với mô hình trước)</p>
-                                <p><strong>Mất mát:</strong> 0.045</p>
-                                <p><strong>Thời gian huấn luyện:</strong> 2 phút 34 giây</p>
-                            </div>
-                        `;
-                    }
-                }, 200);
-            });
-            
-            addDataBtn.addEventListener('click', function() {
-                trainingStatus.textContent = "Đang thêm dữ liệu...";
-                trainingResults.innerHTML = "";
-                
-                setTimeout(() => {
-                    trainingStatus.textContent = "Dữ liệu đã được thêm";
-                    document.getElementById('trainingData').textContent = "12,792 mẫu";
-                    trainingResults.innerHTML = `
-                        <div class="result-card">
-                            <div class="result-header">
-                                <h3>Dữ Liệu Đã Được Thêm</h3>
-                                <div class="risk-level risk-low">Thành Công</div>
-                            </div>
-                            <p><strong>245 mẫu dữ liệu mới đã được thêm vào cơ sở dữ liệu huấn luyện.</strong></p>
-                            <p><strong>Phân loại:</strong> 187 email lừa đảo, 58 email hợp pháp</p>
-                            <p><strong>Nguồn:</strong> Báo cáo người dùng và thu thập tự động</p>
-                        </div>
-                    `;
-                }, 1500);
-            });
-            
-            evaluateModelBtn.addEventListener('click', function() {
-                trainingStatus.textContent = "Đang đánh giá mô hình...";
-                trainingResults.innerHTML = "";
-                
-                setTimeout(() => {
-                    trainingStatus.textContent = "Đánh giá hoàn tất";
-                    trainingResults.innerHTML = `
-                        <div class="result-card">
-                            <div class="result-header">
-                                <h3>Kết Quả Đánh Giá Mô Hình</h3>
-                                <div class="risk-level risk-low">Xuất Sắc</div>
-                            </div>
-                            <p><strong>Mô hình hiện tại hoạt động tốt trên tập dữ liệu kiểm tra.</strong></p>
-                            <p><strong>Độ chính xác:</strong> 98.7%</p>
-                            <p><strong>Độ chính xác cho email lừa đảo:</strong> 99.2%</p>
-                            <p><strong>Độ chính xác cho email hợp pháp:</strong> 98.1%</p>
-                            <p><strong>Tỷ lệ dương tính giả:</strong> 0.8%</p>
-                            <p><strong>Tỷ lệ âm tính giả:</strong> 0.5%</p>
-                        </div>
-                    `;
-                }, 2000);
             });
         });
     </script>

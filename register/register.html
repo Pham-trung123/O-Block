@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng ký - SecureMail</title>
+    <link rel="stylesheet" href="register.css">
+    <script src="register.js"></script>
+  
+</head>
+<body>
+  <div class="register-container">
+    <h2>Tạo tài khoản SecureMail</h2>
+
+    <div class="input-group">
+      <label for="username">Tên đăng nhập</label>
+      <input type="text" id="username" placeholder="Nhập tên đăng nhập">
+    </div>
+
+    <div class="input-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Nhập email">
+    </div>
+
+    <div class="input-group">
+      <label for="password">Mật khẩu</label>
+      <input type="password" id="password" placeholder="Nhập mật khẩu">
+    </div>
+
+    <div class="input-group">
+      <label for="confirm">Nhập lại mật khẩu</label>
+      <input type="password" id="confirm" placeholder="Xác nhận mật khẩu">
+    </div>
+
+    <label>Mã xác thực</label>
+    <div class="captcha-box">
+      <div id="captcha" class="captcha-code"></div>
+      <button class="refresh-btn" onclick="generateCaptcha()">🔄</button>
+    </div>
+
+    <input type="text" id="captchaInput" placeholder="Nhập mã xác thực">
+
+    <button class="register-btn" onclick="register()">Đăng ký</button>
+
+    <div class="link">
+      Đã có tài khoản? <a href="../login/login.html">Đăng nhập</a>
+    </div>
+  </div>
+
+</body>
+</html>
