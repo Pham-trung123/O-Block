@@ -6,213 +6,295 @@
   <title>Trợ lý AI - SecureMail</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #f4f6f9, #e8f8f5);
+    /* ==================== Màu chủ đạo ==================== */
+    :root {
+      --primary: #1a73e8; /* Xanh SecureMail */
+      --secondary: #155fc2;
+      --success: #43a047;
+      --light: #f5f7fa;
+      --dark: #333;
+      --gray: #777;
+      --white: #fff;
+    }
+
+    /* ==================== Reset ==================== */
+    * {
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100vh;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    .assistant-container {
+    body {
+      background-color: #f2f6ff;
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ==================== Header ==================== */
+    header {
+      background-color: var(--primary);
+      color: #fff;
+      padding: 15px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .header-container {
       width: 90%;
-      max-width: 700px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      margin-top: 50px;
-      padding: 25px;
-      position: relative;
-    }
-
-    h1 {
-      text-align: center;
-      color: #00b894;
-      font-size: 26px;
-      margin-bottom: 15px;
-    }
-
-    .suggestions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .suggestion-btn {
-      padding: 12px;
-      background: linear-gradient(90deg, #00c896, #00e6b8);
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.3s;
-    }
-
-    .suggestion-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 232, 184, 0.4);
-    }
-
-    .chat-box {
-      margin-top: 20px;
-      height: 300px;
-      overflow-y: auto;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 15px;
-      background: #fafafa;
-    }
-
-    .message {
-      margin-bottom: 15px;
-      line-height: 1.6;
-    }
-
-    .user {
-      text-align: right;
-      color: #333;
-    }
-
-    .assistant {
-      text-align: left;
-      color: #0b5345;
-      background: #e8f8f5;
-      padding: 10px;
-      border-radius: 8px;
-      display: inline-block;
-    }
-
-    .input-area {
+      margin: auto;
       display: flex;
-      margin-top: 15px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.4rem;
+      color: #fff;
+    }
+
+    .logo i {
+      margin-right: 8px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 25px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: #cce0ff;
+    }
+
+    .auth-buttons {
+      display: flex;
       gap: 10px;
     }
 
-    input {
+    .btn-login, .btn-register {
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.3s;
+      text-decoration: none;
+    }
+
+    .btn-login {
+      border: 1px solid #fff;
+      color: #fff;
+      background: transparent;
+    }
+
+    .btn-login:hover {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    .btn-register {
+      background: var(--success);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-register:hover {
+      background: #2e7d32;
+    }
+
+    /* ==================== Chatbot container ==================== */
+    .chatbot-container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+
+    .chatbot-header {
+      text-align: center;
+      color: var(--primary);
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
+
+    .chatbot-header i {
+      margin-right: 10px;
+    }
+
+    .chatbot-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .chatbot-buttons button {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .chatbot-buttons button:hover {
+      background-color: var(--secondary);
+    }
+
+    /* ==================== Chatbox ==================== */
+    .chat-box {
+      width: 100%;
+      height: 280px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 15px;
+      overflow-y: auto;
+      background-color: var(--light);
+      margin-bottom: 20px;
+    }
+
+    .chat-message {
+      margin: 8px 0;
+      padding: 10px 15px;
+      border-radius: 12px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .chat-message.user {
+      background-color: var(--primary);
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .chat-message.bot {
+      background-color: #e8f0fe;
+      color: var(--dark);
+    }
+
+    /* ==================== Input area ==================== */
+    .chat-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-input input {
       flex: 1;
       padding: 12px;
       border-radius: 10px;
       border: 1px solid #ccc;
       outline: none;
+      font-size: 1rem;
     }
 
-    button.send-btn {
-      background: linear-gradient(90deg, #00c896, #00e6b8);
-      color: white;
+    .chat-input button {
+      background-color: var(--primary);
+      color: #fff;
       border: none;
+      padding: 12px 22px;
       border-radius: 10px;
-      padding: 12px 20px;
-      cursor: pointer;
       font-weight: bold;
-      transition: opacity 0.3s;
+      cursor: pointer;
+      transition: 0.3s;
     }
 
-    button.send-btn:hover {
-      opacity: 0.85;
+    .chat-input button:hover {
+      background-color: var(--secondary);
     }
   </style>
 </head>
-<body>
-  <div class="assistant-container">
-    <h1><i class="fas fa-robot"></i> Trợ lý AI - SecureMail</h1>
 
-    <!-- Câu hỏi gợi ý -->
-    <div class="suggestions" id="suggestions">
-      <button class="suggestion-btn">Email lừa đảo là gì?</button>
-      <button class="suggestion-btn">Làm sao để nhận biết email giả mạo?</button>
-      <button class="suggestion-btn">Hệ thống SecureMail hoạt động như thế nào?</button>
-      <button class="suggestion-btn">Nếu bị lừa đảo qua email thì cần làm gì?</button>
+<body>
+  <!-- ==================== Header ==================== -->
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <i class="fas fa-shield-alt"></i>
+        <span>SecureMail</span>
+      </div>
+      <nav class="nav-links">
+        <a href="../index.html">Trang chủ</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== Chatbot ==================== -->
+  <div class="chatbot-container">
+    <div class="chatbot-header">
+      <i class="fas fa-robot"></i> Trợ lý AI - SecureMail
     </div>
 
-    <!-- Khung chat -->
-    <div class="chat-box" id="chatBox"></div>
+    <div class="chatbot-buttons">
+      <button>Email lừa đảo là gì?</button>
+      <button>Làm sao để nhận biết email giả mạo?</button>
+      <button>Hệ thống SecureMail hoạt động như thế nào?</button>
+      <button>Nếu bị lừa đảo qua email thì cần làm gì?</button>
+    </div>
 
-    <!-- Nhập câu hỏi -->
-    <div class="input-area">
-      <input type="text" id="userInput" placeholder="Nhập câu hỏi của bạn...">
-      <button class="send-btn" id="sendBtn">Gửi</button>
+    <div class="chat-box" id="chat-box">
+      <div class="chat-message bot">Xin chào! Tôi là Trợ lý AI của SecureMail. Tôi có thể giúp bạn tìm hiểu về các vấn đề liên quan đến email lừa đảo.</div>
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Nhập câu hỏi của bạn...">
+      <button id="send-btn">Gửi</button>
     </div>
   </div>
 
   <script>
-    const chatBox = document.getElementById("chatBox");
-    const suggestions = document.getElementById("suggestions");
-    const input = document.getElementById("userInput");
-    const sendBtn = document.getElementById("sendBtn");
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const buttons = document.querySelectorAll(".chatbot-buttons button");
 
-    // Danh sách câu trả lời chi tiết
-    const answers = {
-      "Email lừa đảo là gì?": `
-        <b>Email lừa đảo (Phishing Email)</b> là những email được gửi với mục đích đánh lừa người nhận,
-        nhằm <b>lấy cắp thông tin cá nhân, tài khoản hoặc tiền bạc</b>.  
-        Kẻ tấn công thường giả mạo tổ chức uy tín như ngân hàng, công ty công nghệ, hoặc cơ quan chính phủ để bạn tin tưởng và nhấp vào liên kết độc hại.
-      `,
-      "Làm sao để nhận biết email giả mạo?": `
-        Một số dấu hiệu phổ biến giúp bạn nhận biết email giả mạo:
-        <ul>
-          <li>Người gửi không rõ ràng, tên miền lạ.</li>
-          <li>Có lỗi chính tả hoặc ngữ pháp trong nội dung.</li>
-          <li>Yêu cầu cung cấp thông tin cá nhân hoặc mật khẩu.</li>
-          <li>Chứa liên kết lạ hoặc tệp đính kèm đáng ngờ.</li>
-        </ul>
-        <b>Mẹo:</b> Không bao giờ nhấp vào liên kết khi bạn không chắc chắn về nguồn gốc email.
-      `,
-      "Hệ thống SecureMail hoạt động như thế nào?": `
-        <b>SecureMail</b> là hệ thống phát hiện email lừa đảo thông minh, ứng dụng công nghệ <b>AI và Machine Learning</b>.
-        <br><br>Hệ thống sẽ:
-        <ol>
-          <li>Phân tích nội dung email (từ ngữ, đường dẫn, người gửi...)</li>
-          <li>So sánh với cơ sở dữ liệu email độc hại đã biết</li>
-          <li>Đưa ra cảnh báo và khuyến nghị hành động cho người dùng</li>
-        </ol>
-        Mục tiêu là giúp bạn bảo vệ thông tin cá nhân và an toàn trong không gian mạng.
-      `,
-      "Nếu bị lừa đảo qua email thì cần làm gì?": `
-        Nếu bạn nghi ngờ bị lừa đảo qua email:
-        <ol>
-          <li>Không nhấp vào bất kỳ liên kết hoặc tệp đính kèm nào.</li>
-          <li>Báo cáo email cho quản trị viên hoặc cơ quan chức năng.</li>
-          <li>Đổi mật khẩu các tài khoản liên quan ngay lập tức.</li>
-          <li>Dùng công cụ như <b>SecureMail</b> để quét và phát hiện các mối đe dọa tiềm ẩn.</li>
-        </ol>
-      `
+    const responses = {
+      "Email lừa đảo là gì?": "Email lừa đảo (phishing email) là loại email được gửi bởi kẻ gian nhằm đánh lừa người nhận để chiếm đoạt thông tin cá nhân, tài khoản ngân hàng hoặc dữ liệu nhạy cảm.",
+      "Làm sao để nhận biết email giả mạo?": "Hãy kiểm tra kỹ địa chỉ email người gửi, nội dung có lỗi chính tả, đường link lạ, và yêu cầu cung cấp thông tin cá nhân. Đây là các dấu hiệu phổ biến của email giả mạo.",
+      "Hệ thống SecureMail hoạt động như thế nào?": "SecureMail sử dụng AI để phân tích nội dung, người gửi, và các mẫu hành vi email nhằm phát hiện dấu hiệu lừa đảo tiềm ẩn trước khi người dùng nhấp vào.",
+      "Nếu bị lừa đảo qua email thì cần làm gì?": "Ngay lập tức ngừng tương tác, không nhấp vào liên kết trong email, thay đổi mật khẩu, và liên hệ với bộ phận IT hoặc cơ quan an ninh mạng để được hỗ trợ."
     };
 
-    // Hiển thị tin nhắn
-    function showMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.classList.add("message", sender);
-      msg.innerHTML = text;
-      chatBox.appendChild(msg);
+    function addMessage(sender, message) {
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("chat-message", sender);
+      msgDiv.textContent = message;
+      chatBox.appendChild(msgDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Xử lý khi người dùng chọn câu gợi ý
-    document.querySelectorAll(".suggestion-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const question = btn.innerText;
-        suggestions.style.display = "none"; // Ẩn phần gợi ý
-        showMessage("user", question);
-        setTimeout(() => {
-          showMessage("assistant", answers[question] || "Xin lỗi, tôi chưa có thông tin về câu hỏi này.");
-        }, 500);
-      });
+    sendBtn.addEventListener("click", () => {
+      const text = userInput.value.trim();
+      if (text === "") return;
+      addMessage("user", text);
+      userInput.value = "";
+      setTimeout(() => {
+        const reply = responses[text] || "Xin lỗi, tôi chưa có thông tin về câu hỏi này. Hãy thử hỏi lại bằng một cách khác.";
+        addMessage("bot", reply);
+      }, 600);
     });
 
-    // Xử lý gửi câu hỏi tùy chọn
-    sendBtn.addEventListener("click", () => {
-      const question = input.value.trim();
-      if (question === "") return;
-      showMessage("user", question);
-      input.value = "";
-      setTimeout(() => {
-        showMessage("assistant", "Cảm ơn bạn đã đặt câu hỏi! Tôi sẽ cố gắng trả lời chi tiết nhất có thể. Bạn có thể hỏi về email lừa đảo, bảo mật, hoặc cách sử dụng SecureMail nhé.");
-      }, 700);
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const question = btn.textContent;
+        addMessage("user", question);
+        setTimeout(() => addMessage("bot", responses[question]), 500);
+      });
     });
   </script>
 </body>

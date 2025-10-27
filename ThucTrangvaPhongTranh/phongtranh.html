@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phòng Tránh | SecureMail</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --secondary: #6c14d0;
+      --danger: #e53935;
+      --success: #43a047;
+      --warning: #ffb300;
+      --light: #f5f7fa;
+      --dark: #1a1a2e;
+      --gray: #777;
+    }
+
+    body {
+      background: var(--light);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--dark);
+      line-height: 1.7;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(90deg, #0f172a, #1e3a8a, #0f172a);
+      color: white;
+      padding: 16px 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      font-size: 22px;
+      font-weight: bold;
+      color: #00eaff;
+      gap: 8px;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 25px;
+    }
+
+    .nav-menu a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .nav-menu a:hover {
+      color: #00eaff;
+    }
+
+    .auth-buttons a {
+      text-decoration: none;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: 1px solid #00eaff;
+    }
+
+    .btn-login {
+      background: transparent;
+      color: #00eaff;
+    }
+
+    .btn-login:hover {
+      background: #00eaff;
+      color: #0f172a;
+    }
+
+    .btn-register {
+      background: #00eaff;
+      color: #0f172a;
+    }
+
+    .btn-register:hover {
+      background: white;
+      color: #0f172a;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 2.4rem;
+      margin-bottom: 25px;
+    }
+
+    .intro {
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .intro p {
+      margin-bottom: 15px;
+      color: var(--dark);
+      font-size: 1.1rem;
+    }
+
+    section {
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      margin-bottom: 40px;
+    }
+
+    section h2 {
+      color: var(--primary);
+      margin-bottom: 15px;
+      border-left: 5px solid var(--primary);
+      padding-left: 10px;
+    }
+
+    section ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    section li {
+      margin-bottom: 15px;
+      line-height: 1.8;
+    }
+
+    section li::before {
+      content: "🔹";
+      color: var(--secondary);
+      margin-right: 8px;
+    }
+
+    footer {
+      background: #0f172a;
+      color: white;
+      padding: 40px 0;
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    footer a {
+      color: #00eaff;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <i class="fas fa-shield-alt"></i> SecureMail
+      </div>
+      <nav class="nav-menu">
+        <a href="../index.html">Trang chủ</a>
+        <a href="../ThucTrangvaPhongTranh/thuctrang.html">Thực trạng</a>
+        <a href="../ThucTrangvaPhongTranh/phongtranh.html" style="color:#00eaff;">Phòng tránh</a>
+      </nav>
+      </div>
+   
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <h1>Biện Pháp Phòng Tránh Rò Rỉ Dữ Liệu & Lừa Đảo Email</h1>
+
+    <div class="intro">
+      <p>Trong thời đại số hóa, mỗi email, tệp tin hay cú nhấp chuột đều có thể trở thành cánh cửa mở ra cho hacker. Những vụ tấn công mạng, đánh cắp dữ liệu, và lừa đảo qua email ngày càng tinh vi, nhắm vào cả cá nhân lẫn tổ chức. Vì vậy, việc nắm rõ các biện pháp phòng tránh không chỉ là kỹ năng công nghệ — mà là <strong>thói quen sinh tồn trong kỷ nguyên số</strong>.</p>
+      <p>Trang này sẽ hướng dẫn chi tiết những bước thực tế để bảo vệ bản thân và doanh nghiệp trước các mối đe dọa từ không gian mạng.</p>
+    </div>
+
+    <!-- PHẦN 1 -->
+    <section>
+      <h2>1. Phòng Tránh Cá Nhân – Từ Thói Quen Hằng Ngày</h2>
+      <ul>
+        <li><strong>Không mở email từ người lạ:</strong> Luôn kiểm tra kỹ địa chỉ người gửi, đặc biệt là các email chứa file đính kèm hoặc đường dẫn lạ. Nhiều hacker giả danh ngân hàng, công ty lớn hoặc người thân để đánh lừa người dùng.</li>
+        <li><strong>Không bấm vào liên kết đáng ngờ:</strong> Đường dẫn trong email có thể dẫn đến trang giả mạo, cài mã độc hoặc yêu cầu nhập thông tin cá nhân.</li>
+        <li><strong>Sử dụng mật khẩu mạnh:</strong> Dài ít nhất 12 ký tự, gồm chữ hoa, thường, số và ký tự đặc biệt. Tuyệt đối không dùng cùng một mật khẩu cho nhiều tài khoản.</li>
+        <li><strong>Kích hoạt xác thực hai yếu tố (2FA):</strong> Giúp bảo vệ tài khoản ngay cả khi mật khẩu bị lộ.</li>
+        <li><strong>Cập nhật phần mềm thường xuyên:</strong> Trình duyệt, hệ điều hành, ứng dụng email đều phải được cập nhật để vá lỗ hổng bảo mật.</li>
+        <li><strong>Không sử dụng Wi-Fi công cộng để đăng nhập:</strong> Hacker có thể chặn dữ liệu của bạn qua mạng không bảo mật.</li>
+        <li><strong>Luôn sao lưu dữ liệu:</strong> Sử dụng cloud hoặc ổ cứng ngoài để tránh mất dữ liệu khi bị tấn công ransomware.</li>
+      </ul>
+    </section>
+
+    <!-- PHẦN 2 -->
+    <section>
+      <h2>2. Biện Pháp Cho Doanh Nghiệp & Tổ Chức</h2>
+      <ul>
+        <li><strong>Đào tạo nhân viên về an toàn thông tin:</strong> 90% các cuộc tấn công mạng bắt đầu từ lỗi của con người. Doanh nghiệp cần huấn luyện định kỳ về cách nhận diện email lừa đảo (phishing).</li>
+        <li><strong>Xây dựng chính sách bảo mật nội bộ:</strong> Bao gồm quy định về mật khẩu, lưu trữ tài liệu, truy cập hệ thống, và xử lý thông tin nhạy cảm.</li>
+        <li><strong>Sử dụng hệ thống lọc thư rác và chống phishing:</strong> Giảm nguy cơ nhân viên vô tình truy cập vào các email nguy hiểm.</li>
+        <li><strong>Phân quyền truy cập hợp lý:</strong> Nhân viên chỉ được truy cập vào dữ liệu cần thiết, tránh rủi ro rò rỉ thông tin nội bộ.</li>
+        <li><strong>Sử dụng mã hóa email và dữ liệu:</strong> Giúp bảo vệ nội dung khi truyền qua mạng.</li>
+        <li><strong>Thiết lập tường lửa, hệ thống IDS/IPS:</strong> Giám sát và ngăn chặn truy cập trái phép vào hệ thống.</li>
+        <li><strong>Kiểm tra bảo mật định kỳ:</strong> Thực hiện kiểm thử xâm nhập (penetration testing) và quét lỗ hổng.</li>
+        <li><strong>Xây dựng kế hoạch ứng phó sự cố:</strong> Đảm bảo doanh nghiệp phản ứng nhanh khi có rò rỉ dữ liệu.</li>
+      </ul>
+    </section>
+
+    <!-- PHẦN 3 -->
+    <section>
+      <h2>3. Kỹ Thuật Phòng Tránh Nâng Cao</h2>
+      <ul>
+        <li><strong>Sử dụng Email Gateway thông minh:</strong> Ứng dụng trí tuệ nhân tạo để phân tích nội dung email, phát hiện tấn công lừa đảo tinh vi.</li>
+        <li><strong>Áp dụng chữ ký số (Digital Signature):</strong> Giúp xác thực người gửi và đảm bảo nội dung không bị thay đổi.</li>
+        <li><strong>Sử dụng DNSSEC và SPF/DKIM/DMARC:</strong> Ngăn chặn hacker giả mạo tên miền gửi email.</li>
+        <li><strong>Giám sát hành vi bất thường:</strong> Phát hiện sớm các hành động truy cập hoặc gửi dữ liệu bất thường từ tài khoản người dùng.</li>
+        <li><strong>Triển khai Zero Trust Architecture:</strong> Không tin tưởng bất kỳ truy cập nào — dù trong hay ngoài mạng nội bộ.</li>
+      </ul>
+    </section>
+
+    <!-- PHẦN 4 -->
+    <section>
+      <h2>4. Nhận Diện Email Lừa Đảo (Phishing)</h2>
+      <ul>
+        <li><strong>Dấu hiệu 1:</strong> Email yêu cầu cung cấp thông tin cá nhân, mật khẩu hoặc OTP.</li>
+        <li><strong>Dấu hiệu 2:</strong> Ngôn ngữ gấp gáp, đe dọa hoặc hứa hẹn phần thưởng.</li>
+        <li><strong>Dấu hiệu 3:</strong> Địa chỉ email lạ, khác biệt nhẹ so với tên miền thật (ví dụ: "vnpay-support@gmail.com" thay vì "@vnpay.vn").</li>
+        <li><strong>Dấu hiệu 4:</strong> Lỗi chính tả, câu cú kỳ lạ hoặc logo mờ, sai màu.</li>
+        <li><strong>Dấu hiệu 5:</strong> File đính kèm dạng .exe, .scr, .bat, hoặc tài liệu yêu cầu “Enable Macro”.</li>
+      </ul>
+    </section>
+
+    <!-- PHẦN 5 -->
+    <section>
+      <h2>5. Các Công Cụ Hỗ Trợ Kiểm Tra Email An Toàn</h2>
+      <ul>
+        <li><strong>Google Safe Browsing:</strong> Kiểm tra đường dẫn có độc hại hay không.</li>
+        <li><strong>VirusTotal:</strong> Phân tích tệp đính kèm hoặc URL.</li>
+        <li><strong>SecureMail Checker:</strong> Công cụ của dự án này giúp phân tích cấu trúc, từ khóa và phát hiện nguy cơ phishing tự động.</li>
+        <li><strong>HaveIBeenPwned:</strong> Kiểm tra email của bạn có từng bị rò rỉ dữ liệu hay chưa.</li>
+      </ul>
+    </section>
+
+    <!-- PHẦN 6 -->
+    <section>
+      <h2>6. Văn Hóa An Toàn Thông Tin</h2>
+      <p>Phòng tránh rủi ro an ninh mạng không chỉ là việc của chuyên gia IT. Nó bắt đầu từ mỗi người dùng, mỗi hành động nhỏ: từ việc cẩn thận khi nhấp chuột, không chia sẻ mật khẩu, đến việc nâng cao nhận thức cho người xung quanh. Doanh nghiệp nào coi bảo mật là một phần của văn hóa — doanh nghiệp đó mới thật sự an toàn.</p>
+    </section>
+
+    <!-- PHẦN 7 -->
+    <section>
+      <h2>7. Kết Luận & Hướng Phát Triển SecureMail</h2>
+      <p>SecureMail được phát triển với mục tiêu hỗ trợ người dùng phát hiện sớm email độc hại, giảm thiểu rủi ro lừa đảo và rò rỉ thông tin. Dự án không chỉ mang ý nghĩa công nghệ, mà còn hướng đến mục tiêu <strong>nâng cao ý thức bảo mật cộng đồng Việt Nam</strong>.</p>
+      <p>Trong tương lai, hệ thống sẽ tích hợp thêm:</p>
+      <ul>
+        <li>Phân tích hành vi gửi email theo thời gian thực.</li>
+        <li>Báo cáo nguy cơ theo ngành nghề.</li>
+        <li>Tích hợp công cụ AI hỗ trợ người dùng xác thực thông tin.</li>
+      </ul>
+      <p>Với sự hợp tác từ cộng đồng và doanh nghiệp, chúng ta có thể cùng nhau xây dựng môi trường mạng an toàn hơn cho mọi người.</p>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2025 SecureMail Project — Giải pháp phát hiện và phòng tránh lừa đảo email thông minh.</p>
+    <p>Liên hệ: <a href="mailto:securemail.support@gmail.com">securemail.support@gmail.com</a></p>
+  </footer>
+
+</body>
+</html>
