@@ -1,25 +1,20 @@
-// db.js
-const sql = require("mssql/msnodesqlv8");
+const sql = require('mssql/msnodesqlv8');
 
 const config = {
-  server: "(localdb)\\MSSQLLocalDB",   // LocalDB instance
-  database: "DoAn",                    // Tên database
-  driver: "msnodesqlv8",
-  options: {
-    trustedConnection: true,
-    enableArithAbort: true,
-  },
+  connectionString:
+    'Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-LT2FQII\\SQLEXPRESS01;Database=phisingemail;Trusted_Connection=Yes;'
 };
 
-async function getConnection() {
+async function getPool() {
+  if (global.__pool) return global.__pool;
   try {
-    const pool = await sql.connect(config);
-    console.log("✅ Kết nối SQL Server thành công!");
-    return pool;
+    global.__pool = await sql.connect(config);
+    console.log('✅ DB connected to phisingemail');
+    return global.__pool;
   } catch (err) {
-    console.error("❌ Lỗi kết nối SQL Server:", err.message);
-    return null;
+    console.error('❌ DB connect error:', err);
+    throw err;
   }
 }
 
-module.exports = { sql, getConnection };
+module.exports = { getPool, sql };
