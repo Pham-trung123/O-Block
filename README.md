@@ -102,7 +102,9 @@ The system is developed using C# (ASP.NET) with a Firebase database and a modern
 ### ⚙️ Installation & Setup
 .NET SDK ≥ 8.0
 Visual Studio 2022 or later
+
 Firebase account (Realtime Database or Firestore enabled)
+
 Python ≥ 3.9 (for AI/NLP module integration)
 
 ---
