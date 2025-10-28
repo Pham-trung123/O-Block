@@ -4,48 +4,106 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng ký - SecureMail</title>
-    <link rel="stylesheet" href="register.css">
-    <script src="register.js"></script>
-  
+  <link rel="stylesheet" href="register.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <div class="register-container">
-    <h2>Tạo tài khoản SecureMail</h2>
+  <div class="register-wrapper">
+    <div class="register-container">
+      <div class="logo-header">
+        <i class="fas fa-shield-alt"></i>
+        <h1>SecureMail</h1>
+      </div>
+      
+      <h2>Tạo tài khoản mới</h2>
+      <p class="subtitle">Tham gia cùng hàng triệu người dùng bảo vệ email của họ</p>
 
-    <div class="input-group">
-      <label for="username">Tên đăng nhập</label>
-      <input type="text" id="username" placeholder="Nhập tên đăng nhập">
+      <form id="registerForm">
+        <div class="input-group">
+          <div class="input-with-icon">
+            <i class="fas fa-user"></i>
+            <input type="text" id="username" placeholder="Tên đăng nhập">
+          </div>
+          <div class="error-message" id="usernameError"></div>
+        </div>
+
+        <div class="input-group">
+          <div class="input-with-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="Địa chỉ email">
+          </div>
+          <div class="error-message" id="emailError"></div>
+        </div>
+
+        <div class="input-group">
+          <div class="input-with-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="Mật khẩu">
+          </div>
+          <div class="error-message" id="passwordError"></div>
+        </div>
+
+        <div class="input-group">
+          <div class="input-with-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="confirm" placeholder="Xác nhận mật khẩu">
+          </div>
+          <div class="error-message" id="confirmError"></div>
+        </div>
+
+        <div class="captcha-section">
+          <label>Mã xác thực</label>
+          <div class="captcha-box">
+            <div id="captcha" class="captcha-code"></div>
+            <button type="button" class="refresh-btn" id="refreshCaptcha">
+              <i class="fas fa-redo"></i>
+            </button>
+          </div>
+          <div class="input-with-icon">
+            <i class="fas fa-key"></i>
+            <input type="text" id="captchaInput" placeholder="Nhập mã xác thực">
+          </div>
+          <div class="error-message" id="captchaError"></div>
+        </div>
+
+        <button type="submit" class="register-btn">
+          <i class="fas fa-user-plus"></i>
+          Đăng ký tài khoản
+        </button>
+      </form>
+
+      <div class="link">
+        Đã có tài khoản? 
+        <a href="../login/login.html">Đăng nhập ngay</a>
+      </div>
     </div>
 
-    <div class="input-group">
-      <label for="email">Email</label>
-      <input type="email" id="email" placeholder="Nhập email">
-    </div>
-
-    <div class="input-group">
-      <label for="password">Mật khẩu</label>
-      <input type="password" id="password" placeholder="Nhập mật khẩu">
-    </div>
-
-    <div class="input-group">
-      <label for="confirm">Nhập lại mật khẩu</label>
-      <input type="password" id="confirm" placeholder="Xác nhận mật khẩu">
-    </div>
-
-    <label>Mã xác thực</label>
-    <div class="captcha-box">
-      <div id="captcha" class="captcha-code"></div>
-      <button class="refresh-btn" onclick="generateCaptcha()">🔄</button>
-    </div>
-
-    <input type="text" id="captchaInput" placeholder="Nhập mã xác thực">
-
-    <button class="register-btn" onclick="register()">Đăng ký</button>
-
-    <div class="link">
-      Đã có tài khoản? <a href="../login/login.html">Đăng nhập</a>
+    <div class="features-sidebar">
+      <h3>Tại sao chọn SecureMail?</h3>
+      <div class="feature-item">
+        <i class="fas fa-shield-check"></i>
+        <div>
+          <strong>Bảo vệ AI tiên tiến</strong>
+          <p>Phát hiện email lừa đảo với độ chính xác 99%</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-bolt"></i>
+        <div>
+          <strong>Quét thời gian thực</strong>
+          <p>Phân tích email ngay khi nhận được</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-database"></i>
+        <div>
+          <strong>Cập nhật liên tục</strong>
+          <p>Cơ sở dữ liệu mối đe dọa luôn được cập nhật</p>
+        </div>
+      </div>
     </div>
   </div>
 
+  <script src="register.js"></script>
 </body>
 </html>
