@@ -11,22 +11,22 @@
 <body>
 
     <header>
-  <div class="header-container">
-    <!-- Logo -->
-    <div class="logo">
-      <i class="fas fa-shield-alt"></i>
-      <span>SecureMail</span>
-    </div>
-    <!-- Right Side -->
-    <div class="header-right">
-      <!-- Nút đăng nhập / đăng ký -->
-      <div class="auth-buttons">
-        <a href="../login/login.html" class="btn-login">Đăng nhập</a>
-        <a href="../register/register.html" class="btn-register">Đăng ký</a>
-      </div>
-    </div>
-  </div>
-</header>
+        <div class="header-container">
+            <!-- Logo -->
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>SecureMail</span>
+            </div>
+            <!-- Right Side -->
+            <div class="header-right">
+                <!-- Nút đăng nhập / đăng ký -->
+                <div class="auth-buttons">
+                    <a href="../login/login.html" class="btn-login">Đăng nhập</a>
+                    <a href="../register/register.html" class="btn-register">Đăng ký</a>
+                </div>
+            </div>
+        </div>
+    </header>
 
     <div class="container">
         <section class="hero">
@@ -104,8 +104,6 @@ Ngân hàng Ví dụ</textarea>
             </div>
         </section>
         
-        <!-- ĐÃ XÓA PHẦN HUẤN LUYỆN AI -->
-        
         <section class="features">
             <div class="feature-card">
                 <div class="feature-icon">
@@ -154,55 +152,42 @@ Ngân hàng Ví dụ</textarea>
             </div>
         </section>
     </div>
-<!-- === Nút Trợ lý AI === -->
-<button class="ai-assistant" id="aiBtn" title="Trợ lý AI">
-  <i class="fas fa-robot"></i>
-</button>
 
-<script>
-  // Khi bấm vào nút mở trang Trợ lý AI
-  document.getElementById("aiBtn").addEventListener("click", function() {
-    window.location.href = "../AI-Assistant/ai-assistant.html";
-  });
-</script>
+    <!-- === Nút Trợ lý AI === -->
+    <button class="ai-assistant" id="aiBtn" title="Trợ lý AI">
+        <i class="fas fa-robot"></i>
+    </button>
 
-<style>
-  /* === Nút Trợ lý AI === */
-  .ai-assistant {
-    position: fixed;
-    bottom: 30px;       /* cách đáy 30px */
-    right: 30px;        /* cách phải 30px */
-    background: linear-gradient(135deg, #0099ff, #00d4ff);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 70px;
-    height: 70px;
-    font-size: 32px;
-    cursor: pointer;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    z-index: 1000;
-    transition: all 0.3s ease;
-  }
-
-  .ai-assistant:hover {
-    transform: scale(1.1);
-    background: linear-gradient(135deg, #0078ff, #00b8d9);
-    box-shadow: 0 10px 25px rgba(0, 119, 255, 0.4);
-  }
-
-  /* Hiệu ứng "thở" cho icon robot 🤖 */
-  .ai-assistant i {
-    animation: pulse 2s infinite ease-in-out;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.15); opacity: 0.85; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-</style>
-
+    <!-- === Khung Chat Popup === -->
+    <div class="chat-popup" id="chatPopup">
+        <div class="chat-header">
+            <h3><i class="fas fa-robot"></i> Trợ lý AI - SecureMail</h3>
+            <button class="close-chat" id="closeChat">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <strong>Xin chào! Tôi là trợ lý AI của SecureMail</strong><br>
+                Tôi có thể giúp bạn hiểu về email lừa đảo và cách bảo vệ bản thân. Dưới đây là một số câu hỏi thường gặp:
+                
+                <div class="suggestions">
+                    <button class="suggestion-btn" data-question="Email lừa đảo là gì?">Email lừa đảo là gì?</button>
+                    <button class="suggestion-btn" data-question="Làm sao nhận biết email giả mạo?">Làm sao nhận biết email giả mạo?</button>
+                    <button class="suggestion-btn" data-question="SecureMail hoạt động như thế nào?">SecureMail hoạt động như thế nào?</button>
+                    <button class="suggestion-btn" data-question="Bị lừa đảo thì làm gì?">Bị lừa đảo thì làm gì?</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Nhập câu hỏi của bạn...">
+            <button class="send-btn" id="sendMessage">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
 
     <footer>
         <div class="container">
@@ -351,6 +336,99 @@ Ngân hàng Ví dụ</textarea>
                 tab.addEventListener('click', function() {
                     tabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
+                });
+            });
+
+            // Xử lý mở/đóng khung chat
+            const aiBtn = document.getElementById('aiBtn');
+            const chatPopup = document.getElementById('chatPopup');
+            const closeChat = document.getElementById('closeChat');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInput = document.getElementById('chatInput');
+            const sendMessage = document.getElementById('sendMessage');
+            const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+
+            // Mở khung chat
+            aiBtn.addEventListener('click', function() {
+                chatPopup.classList.add('active');
+            });
+
+            // Đóng khung chat
+            closeChat.addEventListener('click', function() {
+                chatPopup.classList.remove('active');
+            });
+
+            // Đóng khi click bên ngoài
+            document.addEventListener('click', function(event) {
+                if (!chatPopup.contains(event.target) && !aiBtn.contains(event.target)) {
+                    chatPopup.classList.remove('active');
+                }
+            });
+
+            // Danh sách câu trả lời
+            const answers = {
+                "Email lừa đảo là gì?": "Email lừa đảo (Phishing) là hình thức tấn công mạng thông qua email, nơi kẻ tấn công giả mạo các tổ chức uy tín để đánh cắp thông tin nhạy cảm như mật khẩu, thông tin thẻ tín dụng, hoặc cài đặt phần mềm độc hại.",
+                "Làm sao nhận biết email giả mạo?": "Dấu hiệu nhận biết email giả mạo: địa chỉ người gửi lạ, lỗi chính tả, yêu cầu khẩn cấp, liên kết đáng ngờ, đính kèm tập tin lạ, yêu cầu thông tin cá nhân.",
+                "SecureMail hoạt động như thế nào?": "SecureMail sử dụng AI và machine learning để phân tích: nội dung email, thông tin người gửi, liên kết URL, và so sánh với cơ sở dữ liệu các mẫu lừa đảo đã biết để đưa ra cảnh báo.",
+                "Bị lừa đảo thì làm gì?": "Nếu nghi ngờ bị lừa đảo: không nhấp liên kết/tải file, báo cáo cho quản trị viên, đổi mật khẩu ngay lập tức, quét máy tính bằng phần mềm diệt virus."
+            };
+
+            // Thêm tin nhắn vào khung chat
+            function addMessage(text, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+                messageDiv.innerHTML = text;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Xử lý gửi tin nhắn
+            function sendChatMessage() {
+                const message = chatInput.value.trim();
+                if (message === '') return;
+                
+                addMessage(message, true);
+                chatInput.value = '';
+                
+                // Phản hồi AI (đơn giản)
+                setTimeout(() => {
+                    let response = "Cảm ơn câu hỏi của bạn! Tôi có thể giúp giải đáp về email lừa đảo, bảo mật email, và cách sử dụng SecureMail.";
+                    
+                    // Kiểm tra từ khóa để đưa ra câu trả lời phù hợp
+                    const lowerMessage = message.toLowerCase();
+                    if (lowerMessage.includes('lừa đảo') || lowerMessage.includes('phishing')) {
+                        response = answers["Email lừa đảo là gì?"];
+                    } else if (lowerMessage.includes('nhận biết') || lowerMessage.includes('phát hiện')) {
+                        response = answers["Làm sao nhận biết email giả mạo?"];
+                    } else if (lowerMessage.includes('hoạt động') || lowerMessage.includes('cách thức')) {
+                        response = answers["SecureMail hoạt động như thế nào?"];
+                    } else if (lowerMessage.includes('làm gì') || lowerMessage.includes('xử lý')) {
+                        response = answers["Bị lừa đảo thì làm gì?"];
+                    }
+                    
+                    addMessage(response);
+                }, 1000);
+            }
+
+            // Gửi tin nhắn khi nhấn nút
+            sendMessage.addEventListener('click', sendChatMessage);
+
+            // Gửi tin nhắn khi nhấn Enter
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+
+            // Xử lý các nút gợi ý
+            suggestionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const question = this.getAttribute('data-question');
+                    addMessage(question, true);
+                    
+                    setTimeout(() => {
+                        addMessage(answers[question] || "Xin lỗi, tôi chưa có thông tin về câu hỏi này.");
+                    }, 500);
                 });
             });
         });
