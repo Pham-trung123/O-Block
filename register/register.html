@@ -15,8 +15,8 @@
         <h1>SecureMail</h1>
       </div>
       
-      <h2>Tạo tài khoản mới</h2>
-      <p class="subtitle">Tham gia cùng hàng triệu người dùng bảo vệ email của họ</p>
+      <h2>Tạo tài khoản</h2>
+      <p class="subtitle">Bảo vệ email của bạn ngay hôm nay</p>
 
       <form id="registerForm">
         <div class="input-group">
@@ -30,7 +30,7 @@
         <div class="input-group">
           <div class="input-with-icon">
             <i class="fas fa-envelope"></i>
-            <input type="email" id="email" placeholder="Địa chỉ email">
+            <input type="email" id="email" placeholder="Email">
           </div>
           <div class="error-message" id="emailError"></div>
         </div>
@@ -39,6 +39,9 @@
           <div class="input-with-icon">
             <i class="fas fa-lock"></i>
             <input type="password" id="password" placeholder="Mật khẩu">
+            <button type="button" class="toggle-password" id="togglePassword">
+              <i class="fas fa-eye"></i>
+            </button>
           </div>
           <div class="error-message" id="passwordError"></div>
         </div>
@@ -47,8 +50,18 @@
           <div class="input-with-icon">
             <i class="fas fa-lock"></i>
             <input type="password" id="confirm" placeholder="Xác nhận mật khẩu">
+            <button type="button" class="toggle-password" id="toggleConfirmPassword">
+              <i class="fas fa-eye"></i>
+            </button>
           </div>
           <div class="error-message" id="confirmError"></div>
+        </div>
+
+        <div class="password-strength">
+          <div class="strength-bar">
+            <div class="strength-fill" id="strengthFill"></div>
+          </div>
+          <div class="strength-text" id="strengthText">Độ mạnh mật khẩu</div>
         </div>
 
         <div class="captcha-section">
@@ -68,37 +81,37 @@
 
         <button type="submit" class="register-btn">
           <i class="fas fa-user-plus"></i>
-          Đăng ký tài khoản
+          Đăng ký
         </button>
       </form>
 
       <div class="link">
         Đã có tài khoản? 
-        <a href="../login/login.html">Đăng nhập ngay</a>
+        <a href="../login/login.html">Đăng nhập</a>
       </div>
     </div>
 
     <div class="features-sidebar">
-      <h3>Tại sao chọn SecureMail?</h3>
+      <h3>Lợi ích SecureMail</h3>
       <div class="feature-item">
-        <i class="fas fa-shield-check"></i>
+        <i class="fas fa-robot"></i>
         <div>
-          <strong>Bảo vệ AI tiên tiến</strong>
-          <p>Phát hiện email lừa đảo với độ chính xác 99%</p>
+          <strong>AI Thông minh</strong>
+          <p>Phát hiện email lừa đảo tự động</p>
         </div>
       </div>
       <div class="feature-item">
         <i class="fas fa-bolt"></i>
         <div>
-          <strong>Quét thời gian thực</strong>
-          <p>Phân tích email ngay khi nhận được</p>
+          <strong>Quét nhanh</strong>
+          <p>Phân tích email thời gian thực</p>
         </div>
       </div>
       <div class="feature-item">
-        <i class="fas fa-database"></i>
+        <i class="fas fa-shield-alt"></i>
         <div>
-          <strong>Cập nhật liên tục</strong>
-          <p>Cơ sở dữ liệu mối đe dọa luôn được cập nhật</p>
+          <strong>Bảo mật</strong>
+          <p>Bảo vệ thông tin cá nhân</p>
         </div>
       </div>
     </div>

@@ -9,9 +9,35 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('email').addEventListener('blur', validateEmail);
   document.getElementById('password').addEventListener('blur', validatePassword);
   
+  // Event listener cho nút hiển thị mật khẩu
+  const togglePassword = document.getElementById('togglePassword');
+  if (togglePassword) {
+    togglePassword.addEventListener('click', togglePasswordVisibility);
+  }
+  
   // Kiểm tra nếu có thông tin đăng nhập được lưu
   checkRememberedLogin();
 });
+
+// Hàm toggle hiển thị mật khẩu
+function togglePasswordVisibility() {
+  const passwordInput = document.getElementById('password');
+  const toggleIcon = document.getElementById('togglePassword');
+  
+  if (!passwordInput || !toggleIcon) return;
+  
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    toggleIcon.classList.remove('fa-eye');
+    toggleIcon.classList.add('fa-eye-slash');
+    toggleIcon.setAttribute('title', 'Ẩn mật khẩu');
+  } else {
+    passwordInput.type = 'password';
+    toggleIcon.classList.remove('fa-eye-slash');
+    toggleIcon.classList.add('fa-eye');
+    toggleIcon.setAttribute('title', 'Hiện mật khẩu');
+  }
+}
 
 // Hàm validate email
 function validateEmail() {
@@ -56,14 +82,18 @@ function validatePassword() {
 
 // Hàm hiển thị lỗi
 function showError(errorElement, inputElement, message) {
-  errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-  inputElement.classList.add('error');
+  if (errorElement && inputElement) {
+    errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+    inputElement.classList.add('error');
+  }
 }
 
 // Hàm xóa lỗi
 function clearError(errorElement, inputElement) {
-  errorElement.textContent = '';
-  inputElement.classList.remove('error');
+  if (errorElement && inputElement) {
+    errorElement.textContent = '';
+    inputElement.classList.remove('error');
+  }
 }
 
 // Hàm kiểm tra thông tin đăng nhập đã lưu
@@ -158,39 +188,6 @@ function showSuccessMessage(message) {
   `;
   
   document.querySelector('.login-body').insertBefore(alert, document.querySelector('#loginForm'));
-  
-  // Thêm CSS cho alert
-  if (!document.querySelector('#alert-styles')) {
-    const style = document.createElement('style');
-    style.id = 'alert-styles';
-    style.textContent = `
-      .alert-message {
-        padding: 12px 16px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 500;
-        animation: slideDown 0.3s ease-out;
-      }
-      .alert-message.success {
-        background: #c6f6d5;
-        color: #22543d;
-        border: 1px solid #9ae6b4;
-      }
-      .alert-message.error {
-        background: #fed7d7;
-        color: #742a2a;
-        border: 1px solid #feb2b2;
-      }
-      @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
 }
 
 // Hàm hiển thị thông báo lỗi
