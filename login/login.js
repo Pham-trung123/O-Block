@@ -1,231 +1,80 @@
+// login.js - Sửa phần kiểm tra đăng nhập
 document.addEventListener('DOMContentLoaded', function() {
-  // Thêm event listener cho form
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    login();
-  });
-  
-  // Event listeners cho real-time validation
-  document.getElementById('email').addEventListener('blur', validateEmail);
-  document.getElementById('password').addEventListener('blur', validatePassword);
-  
-  // Event listener cho nút hiển thị mật khẩu
-  const togglePassword = document.getElementById('togglePassword');
-  if (togglePassword) {
-    togglePassword.addEventListener('click', togglePasswordVisibility);
-  }
-  
-  // Kiểm tra nếu có thông tin đăng nhập được lưu
-  checkRememberedLogin();
-});
-
-// Hàm toggle hiển thị mật khẩu
-function togglePasswordVisibility() {
-  const passwordInput = document.getElementById('password');
-  const toggleIcon = document.getElementById('togglePassword');
-  
-  if (!passwordInput || !toggleIcon) return;
-  
-  if (passwordInput.type === 'password') {
-    passwordInput.type = 'text';
-    toggleIcon.classList.remove('fa-eye');
-    toggleIcon.classList.add('fa-eye-slash');
-    toggleIcon.setAttribute('title', 'Ẩn mật khẩu');
-  } else {
-    passwordInput.type = 'password';
-    toggleIcon.classList.remove('fa-eye-slash');
-    toggleIcon.classList.add('fa-eye');
-    toggleIcon.setAttribute('title', 'Hiện mật khẩu');
-  }
-}
-
-// Hàm validate email
-function validateEmail() {
-  const email = document.getElementById('email').value.trim();
-  const errorElement = document.getElementById('emailError');
-  const inputElement = document.getElementById('email');
-  
-  if (!email) {
-    showError(errorElement, inputElement, 'Vui lòng nhập địa chỉ email');
-    return false;
-  }
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    showError(errorElement, inputElement, 'Địa chỉ email không hợp lệ');
-    return false;
-  }
-  
-  clearError(errorElement, inputElement);
-  return true;
-}
-
-// Hàm validate password
-function validatePassword() {
-  const password = document.getElementById('password').value;
-  const errorElement = document.getElementById('passwordError');
-  const inputElement = document.getElementById('password');
-  
-  if (!password) {
-    showError(errorElement, inputElement, 'Vui lòng nhập mật khẩu');
-    return false;
-  }
-  
-  if (password.length < 6) {
-    showError(errorElement, inputElement, 'Mật khẩu phải có ít nhất 6 ký tự');
-    return false;
-  }
-  
-  clearError(errorElement, inputElement);
-  return true;
-}
-
-// Hàm hiển thị lỗi
-function showError(errorElement, inputElement, message) {
-  if (errorElement && inputElement) {
-    errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-    inputElement.classList.add('error');
-  }
-}
-
-// Hàm xóa lỗi
-function clearError(errorElement, inputElement) {
-  if (errorElement && inputElement) {
-    errorElement.textContent = '';
-    inputElement.classList.remove('error');
-  }
-}
-
-// Hàm kiểm tra thông tin đăng nhập đã lưu
-function checkRememberedLogin() {
-  const rememberedEmail = localStorage.getItem('rememberedEmail');
-  if (rememberedEmail) {
-    document.getElementById('email').value = rememberedEmail;
-    document.getElementById('remember').checked = true;
-  }
-}
-
-// Hàm đăng nhập chính
-async function login() {
-  // Validate tất cả các trường
-  const isEmailValid = validateEmail();
-  const isPasswordValid = validatePassword();
-  
-  if (isEmailValid && isPasswordValid) {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const remember = document.getElementById('remember').checked;
+    console.log('✅ Login page loaded');
     
-    // Hiển thị loading
-    const loginBtn = document.querySelector('.login-btn');
-    const originalText = loginBtn.innerHTML;
-    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...';
-    loginBtn.disabled = true;
+    // TẠM THỜI COMMENT phần tự động chuyển hướng để test
+    /*
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn === 'true') {
+        console.log('ℹ️ User đã đăng nhập, chuyển hướng đến trang chủ...');
+        window.location.href = "index.html";
+        return;
+    }
+    */
     
-    try {
-      // Gửi request đăng nhập
-      const res = await fetch('http://localhost:3000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+    const loginForm = document.getElementById("loginForm");
+    
+    if (!loginForm) {
+        console.error('❌ Không tìm thấy form đăng nhập');
+        return;
+    }
 
-      const data = await res.json();
-      
-      if (res.ok) {
-        // Lưu thông tin đăng nhập nếu chọn "Ghi nhớ"
-        if (remember) {
-          localStorage.setItem('rememberedEmail', email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
+    loginForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        console.log('🎯 Form submitted');
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        console.log('📧 Email:', email);
+        console.log('🔑 Password:', password ? '***' : 'empty');
+
+        if (!email || !password) {
+            alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
+            return;
         }
+
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
         
-        // Lưu token (trong thực tế)
-        localStorage.setItem('authToken', data.token);
-        
-        // Hiệu ứng thành công
-        showSuccessMessage('Đăng nhập thành công! Đang chuyển hướng...');
-        
-        // Chuyển hướng sau 1.5 giây
-        setTimeout(() => {
-          window.location.href = '../index.html';
-        }, 1500);
-        
-      } else {
-        throw new Error(data.message || 'Đăng nhập thất bại');
-      }
-      
-    } catch (err) {
-      // Hiển thị lỗi
-      showErrorMessage(err.message || 'Lỗi kết nối đến server!');
-      
-      // Khôi phục nút đăng nhập
-      loginBtn.innerHTML = originalText;
-      loginBtn.disabled = false;
-    }
-  } else {
-    // Cuộn đến trường đầu tiên bị lỗi
-    const firstError = document.querySelector('.error');
-    if (firstError) {
-      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstError.focus();
-    }
-  }
-}
+        try {
+            btn.textContent = "Đang đăng nhập...";
+            btn.disabled = true;
 
-// Hàm hiển thị thông báo thành công
-function showSuccessMessage(message) {
-  const existingAlert = document.querySelector('.alert-message');
-  if (existingAlert) {
-    existingAlert.remove();
-  }
-  
-  const alert = document.createElement('div');
-  alert.className = 'alert-message success';
-  alert.innerHTML = `
-    <i class="fas fa-check-circle"></i>
-    <span>${message}</span>
-  `;
-  
-  document.querySelector('.login-body').insertBefore(alert, document.querySelector('#loginForm'));
-}
+            console.log('🔄 Đang gửi yêu cầu đến server...');
 
-// Hàm hiển thị thông báo lỗi
-function showErrorMessage(message) {
-  const existingAlert = document.querySelector('.alert-message');
-  if (existingAlert) {
-    existingAlert.remove();
-  }
-  
-  const alert = document.createElement('div');
-  alert.className = 'alert-message error';
-  alert.innerHTML = `
-    <i class="fas fa-exclamation-triangle"></i>
-    <span>${message}</span>
-  `;
-  
-  document.querySelector('.login-body').insertBefore(alert, document.querySelector('#loginForm'));
-  
-  // Tự động xóa thông báo sau 5 giây
-  setTimeout(() => {
-    if (alert.parentNode) {
-      alert.remove();
-    }
-  }, 5000);
-}
+            const response = await fetch("http://localhost:3000/api/login", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json" 
+                },
+                body: JSON.stringify({ email, password }),
+            });
 
-// Xử lý đăng nhập bằng Google
-document.querySelector('.social-btn.google')?.addEventListener('click', function() {
-  showErrorMessage('Tính năng đăng nhập bằng Google đang được phát triển');
-});
+            console.log('📨 Response status:', response.status);
+            
+            const data = await response.json();
+            console.log('📦 Response data:', data);
 
-// Xử lý đăng nhập bằng GitHub
-document.querySelector('.social-btn.github')?.addEventListener('click', function() {
-  showErrorMessage('Tính năng đăng nhập bằng GitHub đang được phát triển');
-});
+            alert(data.message);
 
-// Xử lý quên mật khẩu
-document.querySelector('.forgot-password')?.addEventListener('click', function(e) {
-  e.preventDefault();
-  showErrorMessage('Tính năng quên mật khẩu đang được phát triển');
+            if (data.success) {
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                console.log('✅ Đăng nhập thành công');
+                
+                setTimeout(() => {
+                    window.location.href = "../index.html";
+                }, 1000);
+            }
+
+        } catch (err) {
+            console.error('💥 Lỗi kết nối:', err);
+            alert("❌ Không thể kết nối đến server!");
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    });
 });
