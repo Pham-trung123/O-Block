@@ -1,0 +1,31 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: "#4361ee",
+        secondary: "#7209b7",
+        accent: "#f72585",
+        dark: "#212529",
+        light: "#f8f9fa",
+      },
+      fontFamily: {
+        sans: ["Segoe UI", "Avenir", "sans-serif"],
+      },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.5s ease-in-out',
+      },
+    },
+  },
+  plugins: [],
+}
