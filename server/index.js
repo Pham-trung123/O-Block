@@ -134,9 +134,13 @@ app.post("/api/login", async (req, res) => {
 
 
 // 🧩 API test
-app.get("/api/test", (req, res) => {
-  res.json({ message: "✅ API hoạt động tốt!", time: new Date().toISOString() });
+app.get("/api", (req, res) => {
+  res.json({
+    status: "✅ Server đang hoạt động!",
+    time: new Date().toLocaleString(),
+  });
 });
+
 
 // 🚀 Khởi động server
 const PORT = 3000;
