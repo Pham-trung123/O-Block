@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // 👁 Icon mắt
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // 👁 Icon mắt
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,11 +35,11 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const response = await fetch("  ", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch("http://localhost:3000/api/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
 
       if (!response.ok) throw new Error(`Lỗi server: ${response.status}`);
 
