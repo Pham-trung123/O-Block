@@ -1,7 +1,5 @@
 // App.jsx
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import EmailAnalyzer from "./pages/EmailAnalyzer"; // ✅ thêm route cho trang phân tích email
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
