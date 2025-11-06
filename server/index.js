@@ -21,7 +21,7 @@ app.use(express.json());
 // ⚙️ Cấu hình kết nối SQL Server
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-LT2FQII\\SQLEXPRESS01;Database=phisingemail;Trusted_Connection=Yes;",
+    "Driver={ODBC Driver 17 for SQL Server};Server=THANHPT09\\SQLEXPRESS03;Database=phisingemail;Trusted_Connection=Yes;",
   options: {
     connectionTimeout: 5000, // Giúp tránh treo
   },
