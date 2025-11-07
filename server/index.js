@@ -3,33 +3,40 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import sql from "mssql/msnodesqlv8.js";
+import nodemailer from "nodemailer";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+// 🧩 Đảm bảo dotenv đọc đúng file .env trong thư mục server/
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, ".env") });
+
+// ⚠️ Kiểm tra biến môi trường
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  console.error("⚠️ Thiếu EMAIL_USER hoặc EMAIL_PASS trong file .env!");
+}
+
 const app = express();
 
-// ⚠️ CORS phải đặt ngay sau khi khởi tạo app
-app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"], // 👈 cho phép cả 2
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"],
-}));
-
-
+// ⚙️ Cấu hình CORS
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 app.use(express.json());
-
 
 // ⚙️ Cấu hình kết nối SQL Server
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-LT2FQII\\SQLEXPRESS01;Database=phisingemail;Trusted_Connection=Yes;",
-  options: {
-    connectionTimeout: 5000, // Giúp tránh treo
-  },
+    "Driver={ODBC Driver 17 for SQL Server};Server=THANHPT09\\SQLEXPRESS03;Database=phisingemail;Trusted_Connection=Yes;",
+  options: { connectionTimeout: 5000 },
 };
 
-
-
-// 🧩 Tạo pool kết nối
+// 🧠 Biến toàn cục lưu pool kết nối
 let pool;
 async function getPool() {
   if (pool) return pool;
@@ -41,21 +48,50 @@ async function getPool() {
   } catch (err) {
     console.error("❌ Lỗi kết nối SQL:", err);
     pool = null;
-    throw err; // 👈 Quan trọng! Ném lỗi ra ngoài để không bị treo
+    throw err;
   }
 }
 
+// ✉️ Cấu hình Gmail trung tâm
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // SSL
+  auth: {
+    user: process.env.EMAIL_USER, // Ví dụ: PhisingHunter.project@gmail.com
+    pass: process.env.EMAIL_PASS, // App Password 16 ký tự
+  },
+});
 
-// 🧠 API Đăng ký tài khoản
+// 📤 Hàm gửi email tiện lợi
+async function sendMail(to, subject, html) {
+  try {
+    await transporter.sendMail({
+      from: `"Phising Hunter Security" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log(`📨 Email đã gửi đến ${to}`);
+  } catch (err) {
+    console.error("❌ Gửi email thất bại:", err);
+  }
+}
+
+// 🧩 API Đăng ký tài khoản
 app.post("/api/register", async (req, res) => {
   try {
     const { fullname, email, password } = req.body;
     if (!fullname || !email || !password) {
-      return res.status(400).json({ success: false, message: "⚠️ Thiếu thông tin đăng ký!" });
+      return res
+        .status(400)
+        .json({ success: false, message: "⚠️ Thiếu thông tin đăng ký!" });
     }
 
     const pool = await getPool();
-    const checkUser = await pool.request().input("email", sql.VarChar, email)
+    const checkUser = await pool
+      .request()
+      .input("email", sql.VarChar, email)
       .query("SELECT * FROM users WHERE email = @email");
 
     if (checkUser.recordset.length > 0) {
@@ -64,58 +100,78 @@ app.post("/api/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await pool.request()
+    await pool
+      .request()
       .input("username", sql.VarChar, fullname)
       .input("email", sql.VarChar, email)
       .input("password", sql.VarChar, hashedPassword)
-      .input("full_name", sql.VarChar, fullname)
       .query(`
-        INSERT INTO users (username, email, password, full_name, role, is_active, created_at, updated_at)
-        VALUES (@username, @email, @password, @full_name, 'user', 1, GETDATE(), GETDATE())
+        INSERT INTO users (username, email, password, role, is_active, created_at, updated_at)
+        VALUES (@username, @email, @password, 'user', 1, GETDATE(), GETDATE())
       `);
 
-    res.json({ success: true, message: "✅ Đăng ký thành công!" });
+    // ✉️ Gửi thông báo chào mừng khi đăng ký
+    const registerMail = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;border-radius:10px;">
+        <h2 style="color:#4F46E5;">🎉 Xin chào ${fullname},</h2>
+        <p>Bạn đã đăng ký thành công tài khoản <b>Phising Hunter</b>.</p>
+        <p>Hệ thống của chúng tôi giúp phát hiện và cảnh báo email lừa đảo một cách thông minh và an toàn.</p>
+        <p>👉 <a href="http://localhost:5173/login" style="color:#4F46E5;font-weight:bold;">Đăng nhập ngay</a> để bắt đầu trải nghiệm.</p>
+        <hr style="margin:16px 0;border:none;border-top:1px solid #ddd;" />
+        <small style="color:#777;">Email này được gửi tự động bởi hệ thống Phising Hunter. Vui lòng không trả lời lại.</small>
+      </div>
+    `;
+    await sendMail(email, "🎉 Đăng ký tài khoản Phising Hunter thành công!", registerMail);
+
+    res.json({
+      success: true,
+      message: "✅ Đăng ký thành công! Vui lòng kiểm tra email.",
+    });
   } catch (err) {
     console.error("❌ Lỗi khi đăng ký:", err);
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
 
-// 🔐 API Đăng nhập (thêm log để debug)
+// 🔐 API Đăng nhập
 app.post("/api/login", async (req, res) => {
   try {
-    console.log("📥 Nhận yêu cầu đăng nhập:", req.body);
-
     const { email, password } = req.body;
     if (!email || !password) {
-      console.log("⚠️ Thiếu thông tin");
-      return res.status(400).json({ success: false, message: "Thiếu thông tin" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Thiếu thông tin đăng nhập!" });
     }
 
     const pool = await getPool();
-    console.log("✅ Đã có pool SQL, bắt đầu truy vấn...");
-
-    const result = await pool.request().input("email", sql.VarChar, email)
+    const result = await pool
+      .request()
+      .input("email", sql.VarChar, email)
       .query("SELECT * FROM users WHERE email = @email");
 
-    console.log("📦 Kết quả truy vấn:", result.recordset);
-
     if (result.recordset.length === 0) {
-      console.log("❌ Không tìm thấy email trong DB");
       return res.json({ success: false, message: "❌ Email không tồn tại!" });
     }
 
     const user = result.recordset[0];
-    console.log("🔑 Đang kiểm tra mật khẩu cho:", user.email);
-
     const validPass = await bcrypt.compare(password, user.password);
-
     if (!validPass) {
-      console.log("❌ Sai mật khẩu cho:", user.email);
       return res.json({ success: false, message: "❌ Mật khẩu sai!" });
     }
 
-    console.log("✅ Đăng nhập thành công cho:", user.email);
+    // ✉️ Gửi email cảnh báo đăng nhập mới
+    const loginMail = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;border-radius:10px;">
+        <h2 style="color:#4F46E5;"> Đăng nhập mới từ tài khoản của bạn</h2>
+        <p>Xin chào ${user.username},</p>
+        <p>Tài khoản <b>${user.email}</b> vừa đăng nhập vào hệ thống <b>Phising Hunter</b> lúc:</p>
+        <p><b>${new Date().toLocaleString()}</b></p>
+        <p>Nếu không phải bạn, vui lòng <a href="http://localhost:5173/forgot-password" style="color:#EF4444;">đổi mật khẩu ngay</a> để đảm bảo an toàn.</p>
+        <hr style="margin:16px 0;border:none;border-top:1px solid #ddd;" />
+        <small style="color:#777;">Email này được gửi tự động. Vui lòng không trả lời lại.</small>
+      </div>
+    `;
+    await sendMail(email, " Đăng nhập mới trên tài khoản Phising Hunter của bạn", loginMail);
 
     res.json({
       success: true,
@@ -132,16 +188,16 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-
-// 🧩 API test
+// 🧪 API test
 app.get("/api", (req, res) => {
   res.json({
-    status: "✅ Server đang hoạt động!",
+    status: "✅ Server đang hoạt động tốt!",
     time: new Date().toLocaleString(),
   });
 });
 
-
 // 🚀 Khởi động server
-const PORT = 3000;
-app.listen(PORT, () => console.log(`🚀 Server chạy tại http://localhost:${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () =>
+  console.log(`🚀 Server chạy tại http://localhost:${PORT}`)
+);
