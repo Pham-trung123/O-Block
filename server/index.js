@@ -5,6 +5,7 @@ import express from "express";
 import sql from "mssql/msnodesqlv8.js";
 import nodemailer from "nodemailer";
 import path from "path";
+import crypto from "crypto";
 import { fileURLToPath } from "url";
 
 // 🧩 Đảm bảo dotenv đọc đúng file .env trong thư mục server/
@@ -56,10 +57,10 @@ async function getPool() {
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
-  secure: true, // SSL
+  secure: true,
   auth: {
-    user: process.env.EMAIL_USER, // Ví dụ: PhisingHunter.project@gmail.com
-    pass: process.env.EMAIL_PASS, // App Password 16 ký tự
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
@@ -78,7 +79,9 @@ async function sendMail(to, subject, html) {
   }
 }
 
+// ========================
 // 🧩 API Đăng ký tài khoản
+// ========================
 app.post("/api/register", async (req, res) => {
   try {
     const { fullname, email, password } = req.body;
@@ -110,15 +113,14 @@ app.post("/api/register", async (req, res) => {
         VALUES (@username, @email, @password, 'user', 1, GETDATE(), GETDATE())
       `);
 
-    // ✉️ Gửi thông báo chào mừng khi đăng ký
+    // ✉️ Gửi thông báo chào mừng
     const registerMail = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;border-radius:10px;">
         <h2 style="color:#4F46E5;">🎉 Xin chào ${fullname},</h2>
         <p>Bạn đã đăng ký thành công tài khoản <b>Phising Hunter</b>.</p>
-        <p>Hệ thống của chúng tôi giúp phát hiện và cảnh báo email lừa đảo một cách thông minh và an toàn.</p>
         <p>👉 <a href="http://localhost:5173/login" style="color:#4F46E5;font-weight:bold;">Đăng nhập ngay</a> để bắt đầu trải nghiệm.</p>
         <hr style="margin:16px 0;border:none;border-top:1px solid #ddd;" />
-        <small style="color:#777;">Email này được gửi tự động bởi hệ thống Phising Hunter. Vui lòng không trả lời lại.</small>
+        <small style="color:#777;">Email này được gửi tự động bởi hệ thống Phising Hunter.</small>
       </div>
     `;
     await sendMail(email, "🎉 Đăng ký tài khoản Phising Hunter thành công!", registerMail);
@@ -133,7 +135,9 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+// ====================
 // 🔐 API Đăng nhập
+// ====================
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -159,19 +163,17 @@ app.post("/api/login", async (req, res) => {
       return res.json({ success: false, message: "❌ Mật khẩu sai!" });
     }
 
-    // ✉️ Gửi email cảnh báo đăng nhập mới
+    // ✉️ Gửi email cảnh báo đăng nhập
     const loginMail = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;border-radius:10px;">
-        <h2 style="color:#4F46E5;"> Đăng nhập mới từ tài khoản của bạn</h2>
+        <h2 style="color:#4F46E5;">🔔 Đăng nhập mới từ tài khoản của bạn</h2>
         <p>Xin chào ${user.username},</p>
         <p>Tài khoản <b>${user.email}</b> vừa đăng nhập vào hệ thống <b>Phising Hunter</b> lúc:</p>
         <p><b>${new Date().toLocaleString()}</b></p>
-        <p>Nếu không phải bạn, vui lòng <a href="http://localhost:5173/forgot-password" style="color:#EF4444;">đổi mật khẩu ngay</a> để đảm bảo an toàn.</p>
-        <hr style="margin:16px 0;border:none;border-top:1px solid #ddd;" />
-        <small style="color:#777;">Email này được gửi tự động. Vui lòng không trả lời lại.</small>
+        <p>Nếu không phải bạn, vui lòng đổi mật khẩu ngay.</p>
       </div>
     `;
-    await sendMail(email, " Đăng nhập mới trên tài khoản Phising Hunter của bạn", loginMail);
+    await sendMail(email, "🔐 Cảnh báo đăng nhập mới - Phising Hunter", loginMail);
 
     res.json({
       success: true,
@@ -184,6 +186,84 @@ app.post("/api/login", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Lỗi khi đăng nhập:", err);
+    res.status(500).json({ success: false, message: "Lỗi server!" });
+  }
+});
+
+// ==============================
+// 📩 API Gửi & xác minh OTP đổi mật khẩu
+// ==============================
+const otpStore = new Map();
+
+// 📤 Gửi OTP qua email
+app.post("/api/request-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.json({ success: false, message: "Thiếu email!" });
+
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input("email", sql.VarChar, email)
+      .query("SELECT username FROM users WHERE email = @email");
+
+    if (result.recordset.length === 0)
+      return res.json({ success: false, message: "Email không tồn tại!" });
+
+    const otp = crypto.randomInt(1000, 9999).toString();
+    otpStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px;background:#fff;border-radius:10px;">
+        <h2 style="color:#4F46E5;">🔐 Mã xác thực OTP</h2>
+        <p>Xin chào <b>${result.recordset[0].username}</b>,</p>
+        <p>Mã xác thực để thay đổi mật khẩu của bạn là:</p>
+        <h1 style="color:#2563EB;letter-spacing:5px;">${otp}</h1>
+        <p>Mã có hiệu lực trong 5 phút.</p>
+      </div>
+    `;
+    await sendMail(email, "🔐 Mã xác thực OTP - Phising Hunter", html);
+    res.json({ success: true, message: "✅ Mã OTP đã gửi tới email." });
+  } catch (err) {
+    console.error("❌ Lỗi gửi OTP:", err);
+    res.status(500).json({ success: false, message: "Lỗi server khi gửi OTP!" });
+  }
+});
+
+// ✅ Xác minh OTP
+app.post("/api/verify-otp", async (req, res) => {
+  const { email, code } = req.body;
+  const record = otpStore.get(email);
+  if (!record) return res.json({ success: false, message: "Chưa gửi mã OTP!" });
+  if (Date.now() > record.expiresAt) return res.json({ success: false, message: "Mã OTP đã hết hạn!" });
+  if (record.otp !== code) return res.json({ success: false, message: "Mã OTP không đúng!" });
+
+  const token = crypto.randomBytes(16).toString("hex");
+  otpStore.set(email, { ...record, token });
+  res.json({ success: true, message: "✅ Xác minh thành công!", token });
+});
+
+// ✅ Đặt lại mật khẩu
+app.post("/api/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    const entry = [...otpStore.entries()].find(([_, val]) => val.token === token);
+
+    if (!entry) return res.json({ success: false, message: "Token không hợp lệ!" });
+    const [email] = entry;
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const pool = await getPool();
+    await pool
+      .request()
+      .input("email", sql.VarChar, email)
+      .input("password", sql.VarChar, hashed)
+      .query("UPDATE users SET password=@password, updated_at=GETDATE() WHERE email=@email");
+
+    otpStore.delete(email);
+    res.json({ success: true, message: "✅ Đổi mật khẩu thành công!" });
+  } catch (err) {
+    console.error("❌ Lỗi đổi mật khẩu:", err);
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
