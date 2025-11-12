@@ -21,7 +21,7 @@ app.use(express.json());
 // ⚙️ Cấu hình kết nối SQL Server
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-LT2FQII\\SQLEXPRESS01;Database=phisingemail;Trusted_Connection=Yes;",
+    "Driver={ODBC Driver 17 for SQL Server};Server=E44T742\\SQLEXPRESS05;Database=phisingemail;Trusted_Connection=Yes;",
   options: {
     connectionTimeout: 5000, // Giúp tránh treo
   },
@@ -131,6 +131,52 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
+// ========================
+// 📊 API: Thống kê email trong ngày
+// ========================
+app.get("/api/stats/daily", async (req, res) => {
+  try {
+    const pool = await getPool();
+    const query = `
+      SELECT risk_level, COUNT(*) as count
+      FROM email_analysis
+      WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)
+      GROUP BY risk_level
+    `;
+    const result = await pool.request().query(query);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("❌ Lỗi lấy dữ liệu daily:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ========================
+// 📈 API: Thống kê theo tuần (2 tháng gần nhất)
+// ========================
+app.get("/api/stats/weekly", async (req, res) => {
+  try {
+    const pool = await getPool();
+    const query = `
+      SELECT 
+        DATEPART(WEEK, created_at) AS week,
+        COUNT(*) AS phishing_count
+      FROM email_analysis
+      WHERE created_at >= DATEADD(MONTH, -2, GETDATE())
+        AND (risk_level = 'Cao' OR is_phishing = 1)
+      GROUP BY DATEPART(WEEK, created_at)
+      ORDER BY week ASC
+    `;
+    const result = await pool.request().query(query);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("❌ Lỗi lấy dữ liệu weekly:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 
 // 🧩 API test
