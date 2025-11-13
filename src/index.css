@@ -1,8 +1,53 @@
-@import "tailwindcss";
+/* ==============================
+   ✅ Core Imports
+   ============================== */
+
+/* ⚠️ Giữ nguyên như bạn có — nhưng Tailwind yêu cầu dùng @tailwind thay vì @import */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ✅ Font Awesome (vẫn giữ nguyên từ bản của bạn) */
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
 
+/* ==============================
+   🎨 Theme Customization
+   ============================== */
 
+/* Dùng @layer thay vì @theme (vì Tailwind không có directive @theme) */
+@layer base {
+  :root {
+    /* Bạn có thể custom màu hoặc font ở đây nếu muốn */
+    --color-primary: #4361ee;
+    --color-secondary: #7209b7;
+    --color-accent: #f72585;
+    --color-dark: #212529;
+    --color-light: #f8f9fa;
 
-@theme {
-  /* Bạn có thể custom màu hoặc font ở đây nếu muố */
+    /* Ví dụ thêm font mặc định */
+    --font-default: "Segoe UI", "Avenir", sans-serif;
+  }
+
+  body {
+    font-family: var(--font-default);
+    background-color: var(--color-light);
+    color: var(--color-dark);
+  }
+}
+
+/* ==============================
+   🧩 Optional Custom Components
+   ============================== */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-[var(--color-primary)] text-white hover:bg-[var(--color-secondary)];
+  }
+
+  .btn-accent {
+    @apply bg-[var(--color-accent)] text-white hover:opacity-90;
+  }
 }

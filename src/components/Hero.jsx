@@ -17,12 +17,6 @@ export default function Hero() {
           Bảo vệ bạn khỏi các trò lừa đảo qua email với hệ thống AI phân tích thông minh
           và cảnh báo mối đe dọa trực tuyến.
         </p>
-        <button 
-          onClick={handleTryAnalysis}
-          className="px-6 py-3 bg-white text-indigo-700 font-semibold rounded-full shadow hover:bg-indigo-50 transition-colors duration-300"
-        >
-          Thử Phân Tích Demo
-        </button>
       </div>
     </section>
   );
