@@ -2,14 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <script src="https://cdn.tailwindcss.com"></script>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Phish Hunters Frontend</title>
+
+    <!-- 🧠 Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- ❌ Gỡ bỏ dòng này nếu bạn dùng Tailwind qua npm -->
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+
+    <!-- ✅ Font Awesome vẫn giữ nguyên nếu bạn muốn dùng icon -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- (Tuỳ chọn) Thêm mô tả SEO cơ bản -->
+    <meta
+      name="description"
+      content="Phish Hunters - AI-powered phishing email detection and alert system"
+    />
   </head>
-  <body>
+
+  <body class="bg-light text-dark font-sans antialiased">
     <div id="root"></div>
+
+    <!-- ⚙️ Vite inject React vào đây -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
