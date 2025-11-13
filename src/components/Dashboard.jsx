@@ -7,43 +7,50 @@ export default function Dashboard() {
   const chart2Ref = useRef(null);
   const [dailyData, setDailyData] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 🧠 1️⃣ Lấy dữ liệu từ API khi tải trang
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id || 0;
+
   useEffect(() => {
+    if (!userId) return;
+
     const fetchStats = async () => {
       try {
         const [dailyRes, weeklyRes] = await Promise.all([
-          fetch("http://localhost:3000/api/stats/daily"),
-          fetch("http://localhost:3000/api/stats/weekly"),
+          fetch(`http://localhost:3000/api/stats/daily/${userId}`),
+          fetch(`http://localhost:3000/api/stats/weekly/${userId}`)
         ]);
+
         const daily = await dailyRes.json();
         const weekly = await weeklyRes.json();
+
         setDailyData(daily);
         setWeeklyData(weekly);
       } catch (err) {
-        console.error("❌ Lỗi khi tải dữ liệu thống kê:", err);
+        console.error("❌ Lỗi tải dữ liệu biểu đồ:", err);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchStats();
-  }, []);
+  }, [userId]);
 
-  // 🧩 2️⃣ Vẽ biểu đồ khi có dữ liệu
   useEffect(() => {
-    if (!chart1Ref.current || !chart2Ref.current) return;
+    if (loading) return;
 
+    // 🔹 Chart 1: Biểu đồ tròn - phân phối rủi ro trong ngày
     const ctx1 = chart1Ref.current.getContext("2d");
-    const ctx2 = chart2Ref.current.getContext("2d");
 
-    // ==============================
-    // 🟢 Biểu đồ 1: Phân bố rủi ro trong ngày
-    // ==============================
-    const low = dailyData.find((d) => d.risk_level === "Thấp")?.count || 0;
-    const medium = dailyData.find((d) => d.risk_level === "Trung bình")?.count || 0;
-    const high = dailyData.find((d) => d.risk_level === "Cao")?.count || 0;
+    // Lấy dữ liệu risk_level (low, medium, high)
+    const low = dailyData.find(d => d.risk_level === "low")?.count || 0;
+    const medium = dailyData.find(d => d.risk_level === "medium")?.count || 0;
+    const high = dailyData.find(d => d.risk_level === "high")?.count || 0;
 
-    // ✅ Nếu chưa có dữ liệu thật → hiển thị dữ liệu mẫu
+    // Nếu không có dữ liệu -> dùng dữ liệu giả mẫu
     const hasNoData = low === 0 && medium === 0 && high === 0;
-    const chartData = hasNoData ? [60, 25, 15] : [low, medium, high];
+    const dailyChartData = hasNoData ? [60, 25, 15] : [low, medium, high];
 
     const chart1 = new Chart(ctx1, {
       type: "doughnut",
@@ -51,11 +58,11 @@ export default function Dashboard() {
         labels: ["Rủi ro thấp", "Trung bình", "Cao"],
         datasets: [
           {
-            data: chartData,
+            data: dailyChartData,
             backgroundColor: [
-              "rgba(34,197,94,0.8)",   // Xanh
-              "rgba(234,179,8,0.8)",   // Vàng
-              "rgba(239,68,68,0.8)",   // Đỏ
+              "rgba(34,197,94,0.8)",   // xanh lá
+              "rgba(234,179,8,0.8)",   // vàng
+              "rgba(239,68,68,0.8)",   // đỏ
             ],
             borderWidth: 1,
             hoverOffset: 10,
@@ -64,9 +71,9 @@ export default function Dashboard() {
       },
       options: {
         plugins: {
-          title: { 
-            display: true, 
-            text: "Phân Phối Mức Độ Cảnh Báo Trong Ngày", 
+          title: {
+            display: true,
+            text: "Phân Phối Mức Độ Cảnh Báo Trong Ngày",
             color: "#111",
             font: { size: 16, weight: "bold" },
           },
@@ -85,39 +92,34 @@ export default function Dashboard() {
       },
     });
 
-    // ==============================
-    // 📈 Biểu đồ 2: Xu hướng email lừa đảo theo tuần
-    // ==============================
-    const weekLabels =
-      weeklyData.length > 0
-        ? weeklyData.map((item, index) => `Tuần ${item.week || index + 1}`)
-        : Array.from({ length: 8 }, (_, i) => `Tuần ${i + 1}`); // Fallback khi chưa có dữ liệu
+    // 🔹 Chart 2: Biểu đồ line - xu hướng đe dọa theo tuần
+    const ctx2 = chart2Ref.current.getContext("2d");
 
-    const phishingCounts =
+    // Chuẩn hóa dữ liệu tuần
+    const labels =
       weeklyData.length > 0
-        ? weeklyData.map((item) => (item.phishing_count > 30 ? 30 : item.phishing_count))
-        : [5, 10, 12, 18, 20, 25, 28, 30]; // Dữ liệu mẫu nếu chưa có
+        ? weeklyData.map((d) => `Tuần ${d.week}`)
+        : ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5", "Tuần 6", "Tuần 7", "Tuần 8"];
+    const dataPoints =
+      weeklyData.length > 0 ? weeklyData.map((d) => d.phishing_count) : [5, 10, 20, 30, 40, 50, 60, 70];
 
     const chart2 = new Chart(ctx2, {
       type: "line",
       data: {
-        labels: weekLabels,
+        labels: labels,
         datasets: [
           {
             label: "Email Lừa Đảo ",
-            data: phishingCounts,
+            data: dataPoints,
             fill: true,
-            borderColor: "rgba(79,70,229,1)",
+            borderColor: "rgba(79,70,229,1)", // xanh tím
             backgroundColor: "rgba(129,140,248,0.2)",
+            borderWidth: 2,
             tension: 0.4,
-            borderWidth: 3,
-            pointRadius: 5,
-            pointBackgroundColor: "rgba(79,70,229,1)",
           },
         ],
       },
       options: {
-        responsive: true,
         plugins: {
           title: {
             display: true,
@@ -128,43 +130,28 @@ export default function Dashboard() {
           legend: { position: "bottom" },
         },
         scales: {
-          x: {
-            title: {
-              display: true,
-              text: "Các Tuần Gần Đây",
-              color: "#111",
-              font: { size: 13 },
-            },
-            grid: { display: false },
-          },
           y: {
             beginAtZero: true,
-            min: 0,
-            max: 30, // ✅ Giới hạn trục Y
+            suggestedMax: 30,
             ticks: {
-              stepSize: 5, // ✅ Hiển thị 5, 10, 15...
-              color: "#333",
-              font: { size: 12 },
+              stepSize: 5,
+              callback: (value) => value,
             },
-            title: {
-              display: true,
-              text: "Số lượng Email Lừa Đảo",
-              color: "#111",
-              font: { size: 13 },
-            },
+          },
+          x: {
+            grid: { display: false },
           },
         },
       },
     });
 
-    // 🧹 Dọn biểu đồ khi re-render
+    // Dọn biểu đồ cũ khi re-render
     return () => {
       chart1.destroy();
       chart2.destroy();
     };
-  }, [dailyData, weeklyData]);
+  }, [dailyData, weeklyData, loading]);
 
-  // 💄 3️⃣ Giao diện hiển thị
   return (
     <section className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 py-16">
       <div className="bg-white/90 p-6 rounded-2xl shadow">

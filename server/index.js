@@ -1,3 +1,6 @@
+// ========================
+// 📦 IMPORTS & CẤU HÌNH CƠ BẢN
+// ========================
 import bcrypt from "bcryptjs";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -7,60 +10,55 @@ import sql from "mssql/msnodesqlv8.js";
 dotenv.config();
 const app = express();
 
-// ⚠️ CORS phải đặt ngay sau khi khởi tạo app
-app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"], // 👈 cho phép cả 2
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"],
-}));
-
+// ⚙️ CORS
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
-
-// ⚙️ Cấu hình kết nối SQL Server
+// ========================
+// 💾 KẾT NỐI SQL SERVER
+// ========================
 const dbConfig = {
   connectionString:
     "Driver={ODBC Driver 17 for SQL Server};Server=E44T742\\SQLEXPRESS05;Database=phisingemail;Trusted_Connection=Yes;",
-  options: {
-    connectionTimeout: 5000, // Giúp tránh treo
-  },
+  options: { connectionTimeout: 5000 },
 };
 
-
-
-// 🧩 Tạo pool kết nối
 let pool;
 async function getPool() {
   if (pool) return pool;
   try {
-    console.log("🔌 Đang kết nối tới SQL Server...");
+    console.log("🔌 Kết nối SQL Server...");
     pool = await sql.connect(dbConfig);
     console.log("✅ Đã kết nối SQL Server!");
     return pool;
   } catch (err) {
     console.error("❌ Lỗi kết nối SQL:", err);
-    pool = null;
-    throw err; // 👈 Quan trọng! Ném lỗi ra ngoài để không bị treo
+    throw err;
   }
 }
 
-
-// 🧠 API Đăng ký tài khoản
+// ========================
+// 👤 API ĐĂNG KÝ TÀI KHOẢN
+// ========================
 app.post("/api/register", async (req, res) => {
   try {
     const { fullname, email, password } = req.body;
-    if (!fullname || !email || !password) {
+    if (!fullname || !email || !password)
       return res.status(400).json({ success: false, message: "⚠️ Thiếu thông tin đăng ký!" });
-    }
 
     const pool = await getPool();
     const checkUser = await pool.request().input("email", sql.VarChar, email)
       .query("SELECT * FROM users WHERE email = @email");
 
-    if (checkUser.recordset.length > 0) {
+    if (checkUser.recordset.length > 0)
       return res.json({ success: false, message: "❌ Email đã tồn tại!" });
-    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -81,41 +79,26 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// 🔐 API Đăng nhập (thêm log để debug)
+// ========================
+// 🔐 API ĐĂNG NHẬP
+// ========================
 app.post("/api/login", async (req, res) => {
   try {
-    console.log("📥 Nhận yêu cầu đăng nhập:", req.body);
-
     const { email, password } = req.body;
-    if (!email || !password) {
-      console.log("⚠️ Thiếu thông tin");
-      return res.status(400).json({ success: false, message: "Thiếu thông tin" });
-    }
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: "⚠️ Thiếu thông tin!" });
 
     const pool = await getPool();
-    console.log("✅ Đã có pool SQL, bắt đầu truy vấn...");
-
     const result = await pool.request().input("email", sql.VarChar, email)
       .query("SELECT * FROM users WHERE email = @email");
 
-    console.log("📦 Kết quả truy vấn:", result.recordset);
-
-    if (result.recordset.length === 0) {
-      console.log("❌ Không tìm thấy email trong DB");
+    if (result.recordset.length === 0)
       return res.json({ success: false, message: "❌ Email không tồn tại!" });
-    }
 
     const user = result.recordset[0];
-    console.log("🔑 Đang kiểm tra mật khẩu cho:", user.email);
-
     const validPass = await bcrypt.compare(password, user.password);
-
-    if (!validPass) {
-      console.log("❌ Sai mật khẩu cho:", user.email);
+    if (!validPass)
       return res.json({ success: false, message: "❌ Mật khẩu sai!" });
-    }
-
-    console.log("✅ Đăng nhập thành công cho:", user.email);
 
     res.json({
       success: true,
@@ -131,20 +114,22 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
+
 // ========================
-// 📊 API: Thống kê email trong ngày
+// 📊 API: Thống kê EMAIL TRONG NGÀY (cho từng user)
 // ========================
-app.get("/api/stats/daily", async (req, res) => {
+app.get("/api/stats/daily/:userId", async (req, res) => {
+  const { userId } = req.params;
   try {
     const pool = await getPool();
     const query = `
-      SELECT risk_level, COUNT(*) as count
+      SELECT risk_level, COUNT(*) AS count
       FROM email_analysis
-      WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)
-      GROUP BY risk_level
+      WHERE user_id = @userId
+        AND CAST(analysis_date AS DATE) = CAST(GETDATE() AS DATE)
+      GROUP BY risk_level;
     `;
-    const result = await pool.request().query(query);
-
+    const result = await pool.request().input("userId", sql.Int, userId).query(query);
     res.json(result.recordset);
   } catch (err) {
     console.error("❌ Lỗi lấy dữ liệu daily:", err);
@@ -153,23 +138,24 @@ app.get("/api/stats/daily", async (req, res) => {
 });
 
 // ========================
-// 📈 API: Thống kê theo tuần (2 tháng gần nhất)
+// 📈 API: Thống kê EMAIL THEO TUẦN (2 tháng gần nhất)
 // ========================
-app.get("/api/stats/weekly", async (req, res) => {
+app.get("/api/stats/weekly/:userId", async (req, res) => {
+  const { userId } = req.params;
   try {
     const pool = await getPool();
     const query = `
       SELECT 
-        DATEPART(WEEK, created_at) AS week,
+        DATEPART(WEEK, analysis_date) AS week,
         COUNT(*) AS phishing_count
       FROM email_analysis
-      WHERE created_at >= DATEADD(MONTH, -2, GETDATE())
-        AND (risk_level = 'Cao' OR is_phishing = 1)
-      GROUP BY DATEPART(WEEK, created_at)
-      ORDER BY week ASC
+      WHERE user_id = @userId
+        AND analysis_date >= DATEADD(MONTH, -2, GETDATE())
+        AND risk_level = 'high'
+      GROUP BY DATEPART(WEEK, analysis_date)
+      ORDER BY week ASC;
     `;
-    const result = await pool.request().query(query);
-
+    const result = await pool.request().input("userId", sql.Int, userId).query(query);
     res.json(result.recordset);
   } catch (err) {
     console.error("❌ Lỗi lấy dữ liệu weekly:", err);
@@ -177,13 +163,15 @@ app.get("/api/stats/weekly", async (req, res) => {
   }
 });
 
-
-
-// 🧩 API test
+// ========================
+// 🧩 API TEST
+// ========================
 app.get("/api/test", (req, res) => {
   res.json({ message: "✅ API hoạt động tốt!", time: new Date().toISOString() });
 });
 
-// 🚀 Khởi động server
+// ========================
+// 🚀 KHỞI ĐỘNG SERVER
+// ========================
 const PORT = 3000;
 app.listen(PORT, () => console.log(`🚀 Server chạy tại http://localhost:${PORT}`));

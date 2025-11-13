@@ -30,10 +30,17 @@ export default function Login() {
       const data = await response.json();
       alert(data.message);
 
-      if (data.success) {
+      if (data.success && data.user) {
+        // ✅ Lưu thông tin người dùng vào localStorage
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("isLoggedIn", "true");
-        navigate("/");
+
+        console.log("✅ Đăng nhập thành công, userId:", data.user.id);
+
+        // ✅ Điều hướng đến Dashboard
+        navigate("/dashboard");
+      } else {
+        alert("❌ Đăng nhập thất bại, kiểm tra lại thông tin!");
       }
     } catch (err) {
       console.error("💥 Lỗi khi kết nối tới server:", err);
