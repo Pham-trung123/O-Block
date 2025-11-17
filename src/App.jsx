@@ -4,9 +4,10 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import EmailAnalyzer from "./pages/EmailAnalyzer";
-import Profile from "./pages/Profile"; // ✅ Thêm trang Hồ sơ cá nhân
-import Navbar from "./components/Navbar"; // ✅ Thêm Navbar
-import { AuthProvider } from "./context/AuthContext"; // ✅ Bọc AuthContext
+import Profile from "./pages/Profile";
+import Navbar from "./components/Navbar";
+import { AuthProvider } from "./context/AuthContext";
+import ChatBox from './components/ChatBox'; 
 
 export default function App() {
   return (
@@ -25,6 +26,9 @@ export default function App() {
             <Route path="/profile" element={<Profile />} /> {/* ✅ Hồ sơ người dùng */}
           </Routes>
         </div>
+
+        {/* THÊM CHATBOX Ở ĐÂY - sẽ hiển thị trên tất cả các trang */}
+        <ChatBox />
       </Router>
     </AuthProvider>
   );
