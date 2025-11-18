@@ -11,6 +11,11 @@ import session from "express-session";
 import gmailRouter from "./gmailAuth.js";
 import { geminiAnalyzer } from "./services/geminiService.js";
 import crypto from "crypto";
+import googleLoginRouter from "./auth/googleAuthLogin.js";
+import facebookLoginRouter from "./auth/facebookLogin.js";
+import githubLoginRouter from "./auth/githubLogin.js";
+import linkedinLoginRouter from "./auth/linkedinLogin.js";
+import axios from "axios";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +23,9 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 
-// CORS + cookie session cho localhost
+// =======================
+// CORS + SESSION
+// =======================
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -47,7 +54,7 @@ app.use(
 // ========================
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=THANHPT09\\SQLEXPRESS03;Database=phisingemail;Trusted_Connection=Yes;",
+    "Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-8LLT5HQ\\MSSQLSERVER01;Database=phisingemail;Trusted_Connection=Yes;",
   options: { connectionTimeout: 5000 },
 };
 
@@ -109,10 +116,12 @@ app.post("/api/register", async (req, res) => {
       .request()
       .input("email", sql.VarChar, email)
       .query("SELECT * FROM users WHERE email = @email");
+
     if (check.recordset.length > 0)
       return res.json({ success: false, message: "❌ Email đã tồn tại!" });
 
     const hashed = await bcrypt.hash(password, 10);
+
     await pool
       .request()
       .input("username", sql.VarChar, fullname)
@@ -137,11 +146,52 @@ app.post("/api/register", async (req, res) => {
 });
 
 // ========================
-// Đăng nhập
+// Đăng nhập + VERIFY reCAPTCHA
 // ========================
 app.post("/api/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, captchaToken } = req.body;
+
+    // ============================
+    // 1️⃣ KIỂM TRA reCAPTCHA TOKEN
+    // ============================
+    if (!captchaToken) {
+      return res.json({
+        success: false,
+        message: "⚠️ Vui lòng xác minh reCAPTCHA!",
+      });
+    }
+
+    // ===== VERIFY CAPTCHA CHUẨN GOOGLE =====
+    try {
+      const googleRes = await axios.post(
+        "https://www.google.com/recaptcha/api/siteverify",
+        new URLSearchParams({
+          secret: process.env.RECAPTCHA_SECRET_KEY,
+          response: captchaToken,
+        }).toString(),
+        {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }
+      );
+
+      if (!googleRes.data.success) {
+        return res.json({
+          success: false,
+          message: "❌ Xác minh reCAPTCHA thất bại!",
+        });
+      }
+    } catch (error) {
+      console.error("❌ Lỗi verify captcha:", error);
+      return res.json({
+        success: false,
+        message: "❌ Không thể xác minh reCAPTCHA!",
+      });
+    }
+
+    // ============================
+    // 2️⃣ LOGIC ĐĂNG NHẬP GỐC
+    // ============================
     const pool = await getPool();
     const result = await pool
       .request()
@@ -160,22 +210,26 @@ app.post("/api/login", async (req, res) => {
     if (!valid)
       return res.json({ success: false, message: "❌ Mật khẩu sai!" });
 
-    // ✅ Gửi email cảnh báo đăng nhập với giao diện giống hình
+    // ===== Gửi email cảnh báo đăng nhập =====
     const now = new Date().toLocaleString("vi-VN", {
       timeZone: "Asia/Ho_Chi_Minh",
     });
 
-    const html = `
+        const html = `
       <div style="font-family:'Segoe UI',Arial,sans-serif;background-color:#0f0f0f;color:#f1f1f1;padding:24px;border-radius:12px;max-width:580px;margin:auto;">
         <h2 style="color:#cdb4ff;text-align:center;margin-bottom:8px;">🔒 Đăng nhập mới từ tài khoản của bạn</h2>
+
         <p style="font-size:15px;line-height:1.6;">Xin chào <b>${user.username}</b>,</p>
+
         <p style="font-size:15px;line-height:1.6;">
           Tài khoản <b style="color:#ffd166;">${email}</b> vừa đăng nhập vào hệ thống 
           <b style="color:#90caf9;">Phish Hunter</b> lúc:
         </p>
+
         <p style="background:#222;padding:10px 14px;border-radius:8px;font-family:monospace;color:#fff;text-align:center;margin:12px 0;">
           ${now}
         </p>
+
         <p style="font-size:15px;line-height:1.6;">
           Nếu đây <b>không phải bạn</b>, vui lòng 
           <a href="http://localhost:5173/login" target="_blank" style="color:#ff6666;text-decoration:none;font-weight:bold;">
@@ -183,12 +237,14 @@ app.post("/api/login", async (req, res) => {
           </a>
           để đảm bảo an toàn.
         </p>
+
         <p style="margin-top:30px;font-size:12px;color:#999;text-align:center;">
           Email này được gửi tự động. Vui lòng không trả lời lại.<br/>
           &copy; 2025 Phish Hunter Security
         </p>
       </div>
     `;
+
 
     await sendMail(
       email,
@@ -207,7 +263,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ========================
-// Quên mật khẩu (OTP)
+// QUÊN MẬT KHẨU — OTP
 // ========================
 app.post("/api/request-otp", async (req, res) => {
   const { email } = req.body;
@@ -219,12 +275,15 @@ app.post("/api/request-otp", async (req, res) => {
       .request()
       .input("email", sql.VarChar, email)
       .query("SELECT id FROM users WHERE email = @email");
+
     if (user.recordset.length === 0)
       return res.json({ success: false, message: "❌ Email không tồn tại!" });
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
     req.session.otp = otp;
     req.session.email = email;
+
     console.log("📩 OTP gửi:", otp);
 
     await sendMail(
@@ -240,8 +299,12 @@ app.post("/api/request-otp", async (req, res) => {
   }
 });
 
+// ========================
+// XÁC MINH OTP
+// ========================
 app.post("/api/verify-otp", (req, res) => {
   const { email, code } = req.body;
+
   if (!email || !code)
     return res.json({ success: false, message: "⚠️ Thiếu thông tin!" });
 
@@ -256,11 +319,16 @@ app.post("/api/verify-otp", (req, res) => {
 
   const token = crypto.randomBytes(16).toString("hex");
   req.session.resetToken = token;
+
   res.json({ success: true, message: "✅ OTP chính xác!", token });
 });
 
+// ========================
+// ĐỔI MẬT KHẨU
+// ========================
 app.post("/api/reset-password", async (req, res) => {
   const { token, newPassword } = req.body;
+
   if (!token || !newPassword)
     return res.json({ success: false, message: "⚠️ Thiếu thông tin!" });
 
@@ -272,6 +340,7 @@ app.post("/api/reset-password", async (req, res) => {
 
   try {
     const hashed = await bcrypt.hash(newPassword, 10);
+
     const pool = await getPool();
     await pool
       .request()
@@ -301,17 +370,25 @@ app.post("/api/analyze", async (req, res) => {
         .json({ success: false, message: "Thiếu nội dung email!" });
 
     const result = await geminiAnalyzer.analyzeEmail(emailContent);
+
     res.json({ success: true, result });
   } catch (error) {
     console.error("❌ Lỗi AI Gemini:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi xử lý AI!" });
+    res.status(500).json({
+      success: false,
+      message: "Lỗi xử lý AI!",
+    });
   }
 });
 
+// ========================
+// OAuth Routers
+// ========================
 app.use("/api/gmail", gmailRouter);
-app.use("/api/google", gmailRouter);
+app.use("/auth/google", googleLoginRouter);
+app.use("/auth/linkedin", linkedinLoginRouter);
+app.use("/auth/github", githubLoginRouter);
+app.use("/auth/facebook", facebookLoginRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>

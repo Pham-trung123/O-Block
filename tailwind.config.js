@@ -16,16 +16,28 @@ export default {
       fontFamily: {
         sans: ["Segoe UI", "Avenir", "sans-serif"],
       },
+
+      // 🟦 Animation cũ của bạn
       keyframes: {
-        'fade-in': {
-          '0%': { opacity: '0', transform: 'translateY(10px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+
+        // 🟧 Animation mới để dùng cho Login UI
+        fadeIn: {
+          "0%": { opacity: 0, transform: "translateY(10px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
         },
       },
+
       animation: {
-        'fade-in': 'fade-in 0.5s ease-in-out',
+        "fade-in": "fade-in 0.5s ease-in-out",
+
+        // 🟧 Animation mới
+        fadeIn: "fadeIn 0.6s ease-in-out",
       },
     },
   },
   plugins: [],
-}
+};
