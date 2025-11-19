@@ -26,6 +26,9 @@ const app = express();
 // =======================
 // CORS + SESSION
 // =======================
+// ========================
+// CORS
+// ========================
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -50,7 +53,7 @@ app.use(
 );
 
 // ========================
-// SQL Server connection
+// SQL Server
 // ========================
 const dbConfig = {
   connectionString:
@@ -64,7 +67,7 @@ async function getPool() {
   try {
     console.log("🔌 Kết nối SQL Server...");
     pool = await sql.connect(dbConfig);
-    console.log("✅ Đã kết nối SQL Server!");
+    console.log("✅ Đã kết nối SQL Server");
     return pool;
   } catch (err) {
     console.error("❌ Lỗi kết nối SQL:", err);
@@ -74,31 +77,12 @@ async function getPool() {
 }
 
 // ========================
-// Nodemailer Gmail
+// Nodemailer
 // ========================
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
 });
-
-transporter.verify((err) => {
-  if (err) console.warn("⚠️ Mailer chưa sẵn sàng:", err.message);
-  else console.log("📮 Mailer sẵn sàng gửi email.");
-});
-
-async function sendMail(to, subject, html) {
-  try {
-    await transporter.sendMail({
-      from: `"Phish Hunters Security" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    });
-    console.log(`📨 Đã gửi email đến ${to}`);
-  } catch (err) {
-    console.error("❌ Gửi email thất bại:", err);
-  }
-}
 
 // ========================
 // Đăng ký
@@ -107,9 +91,7 @@ app.post("/api/register", async (req, res) => {
   try {
     const { fullname, email, password } = req.body;
     if (!fullname || !email || !password)
-      return res
-        .status(400)
-        .json({ success: false, message: "⚠️ Thiếu thông tin đăng ký!" });
+      return res.json({ success: false, message: "Thiếu dữ liệu!" });
 
     const pool = await getPool();
     const check = await pool
@@ -117,10 +99,12 @@ app.post("/api/register", async (req, res) => {
       .input("email", sql.VarChar, email)
       .query("SELECT * FROM users WHERE email = @email");
 
+
     if (check.recordset.length > 0)
-      return res.json({ success: false, message: "❌ Email đã tồn tại!" });
+      return res.json({ success: false, message: "Email đã tồn tại!" });
 
     const hashed = await bcrypt.hash(password, 10);
+
 
     await pool
       .request()
@@ -132,16 +116,10 @@ app.post("/api/register", async (req, res) => {
         VALUES (@username, @email, @password, 'user', 1, GETDATE(), GETDATE())
       `);
 
-    await sendMail(
-      email,
-      "🎉 Đăng ký tài khoản Phish Hunters thành công!",
-      `<h3>Chào mừng ${fullname}!</h3><p>Bạn đã đăng ký thành công tài khoản.</p>`
-    );
-
-    res.json({ success: true, message: "✅ Đăng ký thành công!" });
+    res.json({ success: true, message: "Đăng ký thành công!" });
   } catch (err) {
-    console.error("❌ Lỗi đăng ký:", err);
-    res.status(500).json({ success: false, message: "Lỗi server!" });
+    console.error("❌ Lỗi:", err);
+    res.status(500).json({ success: false, message: "Lỗi server" });
   }
 });
 
@@ -199,11 +177,11 @@ app.post("/api/login", async (req, res) => {
       .query("SELECT * FROM users WHERE email = @email");
 
     if (result.recordset.length === 0)
-      return res.json({ success: false, message: "❌ Email không tồn tại!" });
+      return res.json({ success: false, message: "Email không tồn tại!" });
 
     const user = result.recordset[0];
 
-    let hash = user.password || "";
+    let hash = user.password;
     if (hash.startsWith("$2y$")) hash = "$2a$" + hash.substring(4);
 
     const valid = await bcrypt.compare(password, hash);
@@ -251,19 +229,21 @@ app.post("/api/login", async (req, res) => {
       "🔐 Đăng nhập mới trên tài khoản Phish Hunter của bạn",
       html
     );
+    if (!valid) return res.json({ success: false, message: "Sai mật khẩu!" });
 
     res.json({
       success: true,
       user: { id: user.id, username: user.username, email: user.email },
     });
   } catch (err) {
-    console.error("❌ Lỗi đăng nhập:", err);
-    res.status(500).json({ success: false, message: "Lỗi server!" });
+    console.error(err);
+    res.status(500).json({ success: false });
   }
 });
 
 // ========================
 // QUÊN MẬT KHẨU — OTP
+// AI Gemini
 // ========================
 app.post("/api/request-otp", async (req, res) => {
   const { email } = req.body;
@@ -278,6 +258,12 @@ app.post("/api/request-otp", async (req, res) => {
 
     if (user.recordset.length === 0)
       return res.json({ success: false, message: "❌ Email không tồn tại!" });
+app.post("/api/analyze", async (req, res) => {
+  try {
+    const { emailContent } = req.body;
+
+    if (!emailContent)
+      return res.json({ success: false, message: "Thiếu nội dung email!" });
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
@@ -291,11 +277,12 @@ app.post("/api/request-otp", async (req, res) => {
       "🔐 Mã OTP đặt lại mật khẩu (Phish Hunters)",
       `<p>Mã OTP của bạn là: <b>${otp}</b> (hiệu lực 10 phút)</p>`
     );
+    const result = await geminiAnalyzer.analyzeEmail(emailContent);
 
-    res.json({ success: true, message: "✅ OTP đã gửi qua email!" });
+    res.json({ success: true, result });
   } catch (err) {
-    console.error("❌ Lỗi gửi OTP:", err);
-    res.status(500).json({ success: false, message: "Lỗi server!" });
+    console.error("❌ Lỗi AI:", err);
+    res.status(500).json({ success: false });
   }
 });
 
@@ -341,25 +328,58 @@ app.post("/api/reset-password", async (req, res) => {
   try {
     const hashed = await bcrypt.hash(newPassword, 10);
 
+// ===========================================================
+// ⭐ FIXED — API LƯU PHÂN TÍCH VÀO DATABASE
+// ===========================================================
+app.post("/api/save-analysis", async (req, res) => {
+  try {
+    const { user_id, email_content, raw_result } = req.body;
+
+    // Ánh xạ đúng dữ liệu từ AI Gemini
+    const risk_level = raw_result?.riskLevel || "UNKNOWN";
+    const threat_score = raw_result?.confidence || 0;
+
+    const sender_analysis = raw_result?.analysis?.senderAnalysis || "";
+    const content_analysis = raw_result?.analysis?.contentAnalysis || "";
+    const link_analysis = raw_result?.analysis?.linkAnalysis || "";
+
+    const recommendation = Array.isArray(raw_result?.analysis?.recommendations)
+      ? raw_result.analysis.recommendations.join("; ")
+      : "";
+
     const pool = await getPool();
-    await pool
-      .request()
-      .input("email", sql.VarChar, req.session.email)
-      .input("password", sql.VarChar, hashed)
-      .query("UPDATE users SET password = @password WHERE email = @email");
 
-    delete req.session.otp;
-    delete req.session.resetToken;
+    await pool.request()
+      .input("user_id", sql.Int, user_id)
+      .input("email_content", sql.NVarChar(sql.MAX), email_content)
+      .input("sender_analysis", sql.NVarChar(sql.MAX), sender_analysis)
+      .input("content_analysis", sql.NVarChar(sql.MAX), content_analysis)
+      .input("link_analysis", sql.NVarChar(sql.MAX), link_analysis)
+      .input("risk_level", sql.NVarChar(50), risk_level)
+      .input("threat_score", sql.Int, threat_score)
+      .input("recommendation", sql.NVarChar(sql.MAX), recommendation)
+      .query(`
+        INSERT INTO email_analysis (
+          user_id, email_content, sender_analysis,
+          content_analysis, link_analysis,
+          risk_level, threat_score, recommendation, analysis_date
+        )
+        VALUES (
+          @user_id, @email_content, @sender_analysis,
+          @content_analysis, @link_analysis,
+          @risk_level, @threat_score, @recommendation, GETDATE()
+        )
+      `);
 
-    res.json({ success: true, message: "✅ Đổi mật khẩu thành công!" });
+    res.json({ success: true, message: "Lưu thành công!" });
   } catch (err) {
-    console.error("❌ Lỗi đổi mật khẩu:", err);
-    res.status(500).json({ success: false, message: "Lỗi server!" });
+    console.error("❌ Lỗi lưu DB:", err);
+    res.status(500).json({ success: false });
   }
 });
 
 // ========================
-// Gemini AI
+// Gmail OAuth
 // ========================
 app.post("/api/analyze", async (req, res) => {
   try {
@@ -390,7 +410,10 @@ app.use("/auth/linkedin", linkedinLoginRouter);
 app.use("/auth/github", githubLoginRouter);
 app.use("/auth/facebook", facebookLoginRouter);
 
+// ========================
+// SERVER START
+// ========================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
-  console.log(`🚀 Server chạy tại http://localhost:${PORT}`)
+  console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`)
 );
