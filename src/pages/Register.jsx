@@ -1,73 +1,81 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import ReCAPTCHA from "react-google-recaptcha";
 
-export default function Register() {
+export default function Register({ isPopup = false }) {
   const navigate = useNavigate();
-  const [captcha, setCaptcha] = useState("");
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState("");
+
   const [input, setInput] = useState({
     username: "",
     email: "",
     password: "",
     confirm: "",
-    captchaInput: "",
   });
 
-  // 🧩 Sinh mã Captcha
-  const generateCaptcha = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-    let code = "";
-    for (let i = 0; i < 5; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setCaptcha(code);
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(null);
+
+  // ======================
+  // PASSWORD STRENGTH
+  // ======================
+  const checkPasswordStrength = (password) => {
+    const strong =
+      /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    const medium = /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
+
+    if (strong.test(password)) return "strong";
+    if (medium.test(password)) return "medium";
+    return "weak";
   };
 
-  useEffect(() => generateCaptcha(), []);
+  const getStrengthColor = () => {
+    if (passwordStrength === "strong") return "bg-green-500";
+    if (passwordStrength === "medium") return "bg-yellow-400";
+    return "bg-red-500";
+  };
 
-  // 🧠 Kiểm tra độ mạnh của mật khẩu
-  const checkPasswordStrength = (password) => {
-    const regexStrong =
-      /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-    const regexMedium = /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
-
-    if (regexStrong.test(password)) return "strong";
-    if (regexMedium.test(password)) return "medium";
-    return "weak";
+  const getStrengthLabel = () => {
+    if (passwordStrength === "strong") return "Mạnh 💪";
+    if (passwordStrength === "medium") return "Trung bình 😐";
+    return "Yếu ⚠️";
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setInput({ ...input, [name]: value });
 
-    if (name === "password") setPasswordStrength(checkPasswordStrength(value));
+    if (name === "password") {
+      setPasswordStrength(checkPasswordStrength(value));
+    }
   };
 
+  // ======================
+  // SUBMIT
+  // ======================
   const handleRegister = async (e) => {
     e.preventDefault();
-    const { username, email, password, confirm, captchaInput } = input;
-    const newErrors = {};
+    let newErrors = {};
 
-    // 🧾 Kiểm tra các điều kiện nhập
+    const { username, email, password, confirm } = input;
+
     if (!username) newErrors.username = "Vui lòng nhập tên đăng nhập!";
     if (!email) newErrors.email = "Vui lòng nhập email!";
 
-    const strongRegex =
+    const strong =
       /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
     if (!password) newErrors.password = "Vui lòng nhập mật khẩu!";
-    else if (!strongRegex.test(password))
-      newErrors.password =
-        "Mật khẩu yếu! Cần ít nhất 8 ký tự, gồm chữ in hoa, số và ký tự đặc biệt.";
+    else if (!strong.test(password))
+      newErrors.password = "Mật khẩu chưa đủ mạnh!";
 
     if (confirm !== password)
       newErrors.confirm = "Mật khẩu nhập lại không khớp!";
-    if (!captchaInput) newErrors.captchaInput = "Vui lòng nhập mã xác thực!";
-    else if (captchaInput !== captcha)
-      newErrors.captchaInput = "Sai mã xác thực!";
+
+    if (!captchaToken) newErrors.captcha = "Vui lòng xác minh Captcha!";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -78,237 +86,189 @@ export default function Register() {
       const response = await fetch("http://localhost:3000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullname: username, email, password }),
+        body: JSON.stringify({
+          fullname: username,
+          email,
+          password,
+          captchaToken,
+        }),
       });
 
       const data = await response.json();
       if (data.success) navigate("/login");
-      else setErrors({ email: data.message || "Đăng ký thất bại!" });
-    } catch (err) {
-      console.error(err);
-      setErrors({ server: "⚠️ Không thể kết nối server!" });
+      else setErrors({ email: data.message });
+    } catch {
+      setErrors({ server: "Không thể kết nối server!" });
     }
   };
 
-  // 🎨 Thanh màu độ mạnh mật khẩu
-  const getStrengthColor = () => {
-    switch (passwordStrength) {
-      case "strong":
-        return "bg-green-500";
-      case "medium":
-        return "bg-yellow-400";
-      default:
-        return "bg-red-500";
-    }
-  };
+  // ======================
+  // FORM DÙNG CHUNG (popup + full)
+  // ======================
+  const renderForm = () => (
+    <form onSubmit={handleRegister} className="space-y-4 mt-4">
+      {/* USERNAME */}
+      <input
+        type="text"
+        name="username"
+        value={input.username}
+        onChange={handleChange}
+        placeholder="Username"
+        className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+      />
+      {errors.username && (
+        <p className="text-red-500 text-sm">{errors.username}</p>
+      )}
 
-  const getStrengthLabel = () => {
-    switch (passwordStrength) {
-      case "strong":
-        return "Mạnh 💪";
-      case "medium":
-        return "Trung bình 😐";
-      default:
-        return "Yếu ⚠️";
-    }
-  };
+      {/* EMAIL */}
+      <input
+        type="email"
+        name="email"
+        value={input.email}
+        onChange={handleChange}
+        placeholder="Email"
+        className="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+      />
+      {errors.email && (
+        <p className="text-red-500 text-sm">{errors.email}</p>
+      )}
+
+      {/* PASSWORD */}
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          name="password"
+          value={input.password}
+          onChange={handleChange}
+          placeholder="Password"
+          className="w-full p-3 pr-10 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-3 text-gray-600"
+        >
+          {showPassword ? <FaEyeSlash /> : <FaEye />}
+        </button>
+      </div>
+
+      {/* STRENGTH */}
+      {input.password && (
+        <div>
+          <div className={`h-2 rounded-full ${getStrengthColor()}`} />
+          <p className="text-sm text-gray-600 mt-1">
+            Độ mạnh: {getStrengthLabel()}
+          </p>
+        </div>
+      )}
+
+      {/* CONFIRM */}
+      <div className="relative">
+        <input
+          type={showConfirm ? "text" : "password"}
+          name="confirm"
+          value={input.confirm}
+          onChange={handleChange}
+          placeholder="Confirm Password"
+          className="w-full p-3 pr-10 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setShowConfirm(!showConfirm)}
+          className="absolute right-3 top-3 text-gray-600"
+        >
+          {showConfirm ? <FaEyeSlash /> : <FaEye />}
+        </button>
+      </div>
+      {errors.confirm && (
+        <p className="text-red-500 text-sm">{errors.confirm}</p>
+      )}
+
+      {/* CAPTCHA */}
+      <div className="flex justify-center scale-[0.9]">
+        <ReCAPTCHA
+          sitekey="6Lcw4RAsAAAAAIUhCAP1C5icEQBHf5LkmaUsQnbZ"
+          onChange={(t) => setCaptchaToken(t)}
+        />
+      </div>
+      {errors.captcha && (
+        <p className="text-red-500 text-sm text-center">
+          {errors.captcha}
+        </p>
+      )}
+
+      {/* REGISTER BUTTON */}
+      <button
+        type="submit"
+        className="w-full py-3 font-bold text-white rounded-lg bg-gradient-to-r from-blue-800 to-cyan-400 shadow-md hover:opacity-90 transition"
+      >
+        Register
+      </button>
+
+      {/* SOCIAL TITLE */}
+      <p className="text-gray-700 text-sm text-center mt-2">
+        or register with social platforms
+      </p>
+
+      {/* SOCIAL ICONS */}
+      <div className="flex justify-center space-x-4 mt-3">
+        <button className="p-3 border rounded-lg hover:bg-gray-100">
+          <i className="fa-brands fa-google text-xl"></i>
+        </button>
+        <button className="p-3 border rounded-lg hover:bg-gray-100">
+          <i className="fa-brands fa-facebook text-xl"></i>
+        </button>
+        <button className="p-3 border rounded-lg hover:bg-gray-100">
+          <i className="fa-brands fa-github text-xl"></i>
+        </button>
+        <button className="p-3 border rounded-lg hover:bg-gray-100">
+          <i className="fa-brands fa-linkedin text-xl"></i>
+        </button>
+      </div>
+    </form>
+  );
+
+  // ======================
+  // 1) MODE POPUP (dùng trong AuthPage)
+  // ======================
+  if (isPopup) {
+    return <div className="w-full">{renderForm()}</div>;
+  }
+
+  // ======================
+  // 2) MODE FULL PAGE (/register) – giao diện đẹp như cũ
+  // ======================
+  const goLogin = () => navigate("/login");
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-700 animate-fade-in">
-      <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-3xl shadow-2xl w-[400px] p-8 text-white">
-        <h2 className="text-center text-2xl font-bold mb-6 tracking-wide">
-          Tạo tài khoản <span className="text-yellow-300">SecureMail</span>
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-300 via-blue-400 to-blue-500 p-6">
+      <div className="w-[850px] bg-white rounded-3xl shadow-2xl flex overflow-hidden relative">
 
-        {/* 🧩 Form */}
-        <form onSubmit={handleRegister} className="space-y-4">
-          {/* Username */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-200">
-              Tên đăng nhập
-            </label>
-            <input
-              type="text"
-              name="username"
-              value={input.username}
-              onChange={handleChange}
-              placeholder="Nhập tên đăng nhập"
-              className="w-full bg-white/20 border border-gray-300/30 rounded-lg p-3 text-white placeholder-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
-            />
-            {errors.username && (
-              <p className="text-red-400 text-sm mt-1">{errors.username}</p>
-            )}
-          </div>
+        {/* LEFT – Registration Form */}
+        <div className="w-[55%] bg-white p-10">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            Registration
+          </h2>
+          {renderForm()}
+        </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-200">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={input.email}
-              onChange={handleChange}
-              placeholder="Nhập email"
-              className="w-full bg-white/20 border border-gray-300/30 rounded-lg p-3 text-white placeholder-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
-            />
-            {errors.email && (
-              <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-200">
-              Mật khẩu
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={input.password}
-                onChange={handleChange}
-                placeholder="Nhập mật khẩu"
-                className="w-full bg-white/20 border border-gray-300/30 rounded-lg p-3 pr-10 text-white placeholder-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
-              />
-              {/* 👁 Hiển thị mật khẩu */}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-300 hover:text-yellow-300"
-              >
-                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-              </button>
-            </div>
-
-            {/* Thanh báo độ mạnh */}
-            {input.password && (
-              <div className="mt-2">
-                <div
-                  className={`h-2 rounded-full transition-all duration-300 ${getStrengthColor()}`}
-                ></div>
-                <p className="text-sm mt-1 text-gray-200">
-                  Độ mạnh mật khẩu: {getStrengthLabel()}
-                </p>
-              </div>
-            )}
-
-            {/* ✅ Ghi chú hướng dẫn mật khẩu */}
-            <div className="mt-2 text-sm text-gray-300 bg-white/10 border border-white/20 rounded-lg p-3">
-              <p className="font-semibold text-yellow-300 mb-1">
-                ✅ Kiểm tra độ mạnh của mật khẩu — phải có:
-              </p>
-              <ul className="list-disc ml-5 space-y-1">
-                <li>
-                  Ít nhất <span className="font-bold text-white">8 ký tự</span>
-                </li>
-                <li>
-                  Ít nhất{" "}
-                  <span className="font-bold text-white">1 chữ in hoa (A–Z)</span>
-                </li>
-                <li>
-                  Ít nhất <span className="font-bold text-white">1 chữ số (0–9)</span>
-                </li>
-                <li>
-                  Ít nhất{" "}
-                  <span className="font-bold text-white">
-                    1 ký tự đặc biệt (!@#$%^&*)
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            {errors.password && (
-              <p className="text-red-400 text-sm mt-1">{errors.password}</p>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-200">
-              Nhập lại mật khẩu
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirm ? "text" : "password"}
-                name="confirm"
-                value={input.confirm}
-                onChange={handleChange}
-                placeholder="Xác nhận mật khẩu"
-                className="w-full bg-white/20 border border-gray-300/30 rounded-lg p-3 pr-10 text-white placeholder-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-3 text-gray-300 hover:text-yellow-300"
-              >
-                {showConfirm ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-              </button>
-            </div>
-            {errors.confirm && (
-              <p className="text-red-400 text-sm mt-1">{errors.confirm}</p>
-            )}
-          </div>
-
-          {/* Captcha */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-200">
-              Mã xác thực
-            </label>
-            <div className="flex items-center mb-3">
-              <div className="flex-1 text-center py-2 font-bold text-lg rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 shadow-md select-none">
-                {captcha}
-              </div>
-              <button
-                type="button"
-                onClick={generateCaptcha}
-                className="ml-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-3 py-2 rounded-lg transition-all shadow-md"
-              >
-                🔄
-              </button>
-            </div>
-
-            <input
-              type="text"
-              name="captchaInput"
-              value={input.captchaInput}
-              onChange={handleChange}
-              placeholder="Nhập mã xác thực"
-              className="w-full bg-white/20 border border-gray-300/30 rounded-lg p-3 text-white placeholder-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
-            />
-            {errors.captchaInput && (
-              <p className="text-red-400 text-sm mt-1">
-                {errors.captchaInput}
-              </p>
-            )}
-          </div>
-
-          {/* Submit */}
+        {/* RIGHT – Blue curved panel */}
+        <div className="w-[45%] bg-gradient-to-br from-blue-900 to-blue-700 text-white flex flex-col justify-center items-center p-10 rounded-l-[250px]">
+          <h2 className="text-3xl font-bold mb-3">Welcome Back!</h2>
+          <p className="text-center mt-6 text-sm text-gray-200">
+            Đã có tài khoản?
+          </p>
           <button
-            type="submit"
-            className="w-full mt-2 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 font-bold rounded-lg shadow-lg hover:scale-[1.03] transition-transform"
+            type="button"
+            onClick={goLogin}
+            className="mt-4 px-6 py-2 border border-white rounded-full 
+              text-white font-semibold hover:bg-white hover:text-blue-700
+              transition-all duration-300"
           >
-            Đăng ký
+            Login
           </button>
+        </div>
 
-          {errors.server && (
-            <p className="text-red-400 text-center text-sm mt-2">
-              {errors.server}
-            </p>
-          )}
-        </form>
-
-        {/* Footer */}
-        <p className="text-center mt-6 text-sm text-gray-200">
-          Đã có tài khoản?{" "}
-          <Link
-            to="/login"
-            className="text-yellow-300 font-semibold hover:underline"
-          >
-            Đăng nhập
-          </Link>
-        </p>
       </div>
     </div>
   );

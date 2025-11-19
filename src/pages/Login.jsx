@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ReCAPTCHA from "react-google-recaptcha";
 
-export default function Login() {
+export default function Login({ isPopup }) {
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -25,10 +25,15 @@ export default function Login() {
   const [message, setMessage] = useState("");
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+  const switchToRegister = () => {
+  window.location.href = "/register";
+};
+
 
   // ========================
   // Đăng nhập
   // ========================
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -71,7 +76,7 @@ export default function Login() {
   };
 
   // ========================
-  // Gửi OTP
+  // Gửi OTP (quên mật khẩu)
   // ========================
   const handleSendOtp = async () => {
     if (!email) return setMessage("Vui lòng nhập email trước!");
@@ -158,14 +163,14 @@ export default function Login() {
   };
 
   // ========================
-  // Form Login
+  // Form Login (UI đẹp)
   // ========================
   const renderLoginForm = () => (
     <form onSubmit={handleSubmit} className="space-y-5">
 
       {/* EMAIL */}
       <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-600">
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
           Email
         </label>
 
@@ -181,18 +186,15 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
             className={`w-full bg-gray-100 border ${
               errors.email ? "border-red-400" : "border-gray-300"
-            } rounded-lg p-3 pl-10 text-gray-800 placeholder-gray-400`}
+            } rounded-lg p-3 pl-10 text-gray-800`}
           />
         </div>
-
-        {errors.email && (
-          <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-        )}
+        {errors.email && <p className="text-red-400 text-sm">{errors.email}</p>}
       </div>
 
       {/* PASSWORD */}
       <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-600">
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
           Mật khẩu
         </label>
 
@@ -214,36 +216,30 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+            className="absolute right-3 top-3 text-gray-500"
           >
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
         </div>
 
         {errors.password && (
-          <p className="text-red-400 text-sm mt-1">{errors.password}</p>
+          <p className="text-red-400 text-sm">{errors.password}</p>
         )}
       </div>
-
-      {/* ERROR */}
-      {errors.general && (
-        <p className="text-red-400 text-center text-sm">{errors.general}</p>
-      )}
 
       {/* CAPTCHA */}
       <div className="flex justify-center scale-[0.9]">
         <ReCAPTCHA
           sitekey={SITE_KEY}
           onChange={(token) => setCaptchaToken(token)}
-          onExpired={() => setCaptchaToken(null)}
         />
       </div>
 
       {/* LOGIN BUTTON */}
       <button
         type="submit"
-        disabled={loading}
-        className="w-full py-3 bg-gradient-to-r from-blue-900 via-blue-700 to-cyan-400 text-white text-lg font-bold rounded-lg shadow-lg hover:scale-[1.03] transition-all"
+        className="w-full py-3 bg-gradient-to-r from-blue-900 via-blue-700 to-cyan-400
+        text-white font-bold rounded-lg shadow-lg hover:scale-[1.02] transition"
       >
         {loading ? "Đang đăng nhập..." : "Login"}
       </button>
@@ -252,34 +248,41 @@ export default function Login() {
       <button
         type="button"
         onClick={handleSendOtp}
-        className="w-full text-blue-500 text-sm hover:underline text-center"
+        className="w-full text-blue-600 text-sm hover:underline text-center"
       >
         Quên mật khẩu?
       </button>
 
-      {/* SOCIAL TITLE */}
-      <p className="text-center text-gray-500 mt-4 text-sm">
+      {/* SOCIAL LOGIN */}
+      <p className="text-center text-gray-600 text-sm mt-4">
         or login with social platforms
       </p>
 
-      {/* SOCIAL ICONS */}
-      <div className="flex justify-center mt-2 space-x-4">
+      <div className="flex justify-center items-center space-x-4 mt-2">
         <button
-          onClick={() => (window.location.href = "http://localhost:3000/auth/google/login")}
+          onClick={() =>
+            (window.location.href = "http://localhost:3000/auth/google/login")
+          }
           className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
         >
           <i className="fa-brands fa-google text-xl"></i>
         </button>
 
         <button
-          onClick={() => (window.location.href = "http://localhost:3000/auth/facebook/login")}
+          onClick={() =>
+            (window.location.href =
+              "http://localhost:3000/auth/facebook/login")
+          }
           className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
         >
           <i className="fa-brands fa-facebook text-xl"></i>
         </button>
 
         <button
-          onClick={() => (window.location.href = "http://localhost:3000/auth/github/login")}
+          onClick={() =>
+            (window.location.href =
+              "http://localhost:3000/auth/github/login")
+          }
           className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
         >
           <i className="fa-brands fa-github text-xl"></i>
@@ -293,10 +296,12 @@ export default function Login() {
   );
 
   // ========================
-  // Form OTP
+  // OTP FORM
   // ========================
   const renderOtpForm = () => (
     <div className="space-y-4">
+      <h3 className="text-xl font-bold text-gray-700 text-center">Xác minh OTP</h3>
+
       <p className="text-gray-600 text-center">
         Mã OTP đã gửi tới <b>{email}</b>
       </p>
@@ -306,34 +311,36 @@ export default function Login() {
         maxLength={4}
         value={otp}
         onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-        className="w-full bg-gray-100 border rounded-lg p-3 text-gray-800 text-center"
+        className="w-full bg-gray-100 border rounded-lg p-3 text-center text-gray-800"
         placeholder="Nhập OTP"
       />
 
       <button
         onClick={handleVerifyOtp}
-        className="w-full py-3 bg-blue-500 text-white font-bold rounded-lg hover:opacity-90"
+        className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg"
       >
-        Xác minh OTP
+        Xác minh
       </button>
 
       <button
         onClick={() => setStep(1)}
-        className="text-gray-500 text-sm hover:underline w-full text-center"
+        className="text-center w-full text-gray-600 hover:underline"
       >
         Hủy
       </button>
+
+      {message && <p className="text-center text-blue-600">{message}</p>}
     </div>
   );
 
   // ========================
-  // Form Reset Password
+  // RESET PASSWORD FORM
   // ========================
   const renderResetForm = () => (
     <div className="space-y-4">
-      <p className="text-center text-gray-600">
-        Nhập mật khẩu mới cho tài khoản
-      </p>
+      <h3 className="text-xl font-bold text-gray-700 text-center">
+        Đổi mật khẩu mới
+      </h3>
 
       <input
         type="password"
@@ -345,7 +352,7 @@ export default function Login() {
 
       <input
         type="password"
-        placeholder="Xác nhận mật khẩu"
+        placeholder="Nhập lại mật khẩu"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
         className="w-full bg-gray-100 border rounded-lg p-3 text-gray-800"
@@ -353,48 +360,71 @@ export default function Login() {
 
       <button
         onClick={handleResetPassword}
-        className="w-full py-3 bg-green-500 text-white font-bold rounded-lg hover:opacity-90"
+        className="w-full py-3 bg-green-600 text-white font-bold rounded-lg"
       >
         Xác nhận đổi mật khẩu
       </button>
 
       {message && (
-        <p className="text-center text-sm text-blue-600">{message}</p>
+        <p className="text-center text-blue-600 text-sm">{message}</p>
       )}
     </div>
+    
   );
+if (isPopup) {
+  return (
+    <div className="p-2 w-full">
+      {renderLoginForm()}
+    </div>
+  );
+}
 
   // ========================
   // UI MAIN
   // ========================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700">
-      <div className="w-[760px] h-[550px] bg-white rounded-3xl shadow-xl overflow-hidden flex">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 px-4">
 
-        {/* LEFT */}
-        <div className="w-[45%] bg-gradient-to-br from-cyan-400 to-blue-500 flex flex-col items-center justify-center text-white p-10">
+      {/* CARD LOGIN */}
+      <div className="w-[850px] h-[550px] bg-white rounded-3xl shadow-2xl flex overflow-hidden">
+
+        {/* LEFT PANEL */}
+        <div className="w-[45%] bg-gradient-to-br from-cyan-400 to-blue-600 
+            flex flex-col items-center justify-center text-white px-10">
+
           <h2 className="text-3xl font-bold mb-3">Hello, Welcome</h2>
-          <p className="opacity-90 mb-6">Don’t have an Account?</p>
 
-          <Link
-            to="/register"
-            className="px-8 py-2 border border-white rounded-full hover:bg-white hover:text-blue-600 transition"
+          <p className="text-center text-sm opacity-90">
+            Don't have an account?
+          </p>
+
+          {/* 👉 NÚT chuyển sang REGISTER đặt NGAY TẠI ĐÂY */}
+          <button
+            type="button"
+            onClick={switchToRegister}
+            className="mt-4 px-6 py-2 border border-white rounded-full 
+              text-white font-semibold hover:bg-white hover:text-blue-700
+              transition-all duration-300"
           >
             Register
-          </Link>
+          </button>
+
         </div>
 
-        {/* RIGHT */}
-        <div className="w-[55%] bg-white flex flex-col justify-center px-10">
-          <h2 className="text-3xl font-bold text-gray-700 mb-6 text-center">
-            Login
+
+        {/* RIGHT PANEL */}
+        <div className="w-[55%] p-10 bg-white flex flex-col justify-center">
+
+          <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+            {step === 1 && "Login"}
+            {step === 2 && "Verify OTP"}
+            {step === 3 && "Reset Password"}
           </h2>
 
           {step === 1 && renderLoginForm()}
           {step === 2 && renderOtpForm()}
           {step === 3 && renderResetForm()}
         </div>
-
       </div>
     </div>
   );
