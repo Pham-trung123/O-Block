@@ -1,3 +1,4 @@
+// components/ChatBox.jsx
 import React, { useState, useRef, useEffect } from "react";
 
 export default function PhishingAIChatbot() {
@@ -74,43 +75,16 @@ export default function PhishingAIChatbot() {
         { name: "Wikipedia - Incident Response", url: "https://en.wikipedia.org/wiki/Incident_response" },
         { name: "HARVEST - Cyber Attack Response", url: "https://www.tandfonline.com/doi/abs/10.1080/19393555.2020.1838356" }
       ]
-    },
-    { 
-      q: ["công cụ chống phishing", "phần mềm phát hiện phishing", "tool chống lừa đảo"], 
-      a: "🛠️ **Các công cụ chống phishing phổ biến**:\n• Email filtering (SpamAssassin, Proofpoint)\n• Anti-phishing toolbar (Netcraft, McAfee)\n• Web security gateway\n• DNS filtering services\n• Browser protection extensions",
-      sources: [
-        { name: "Wikipedia - Anti-phishing", url: "https://en.wikipedia.org/wiki/Phishing#Anti-phishing" },
-        { name: "HARVEST - Security Tools", url: "https://dl.acm.org/doi/10.1145/3365001" }
-      ]
-    },
-    { 
-      q: ["thống kê phishing", "số liệu tấn công phishing", "tỷ lệ thành công"], 
-      a: "📊 **Thống kê phishing năm 2024**:\n• 36% các vụ tấn công mạng bắt đầu từ phishing\n• Thiệt hại trung bình: $4.65 triệu/vụ doanh nghiệp\n• 74% người dùng không nhận diện được email phishing\n• Spear phishing chiếm 65% các vụ tấn công có chủ đích",
-      sources: [
-        { name: "Wikipedia - Phishing Statistics", url: "https://en.wikipedia.org/wiki/Phishing#Prevalence" },
-        { name: "HARVEST - Cyber Crime Stats", url: "https://www.sciencedirect.com/science/article/pii/S1361372323000456" }
-      ]
-    },
-    { 
-      q: ["luật pháp chống phishing", "pháp lý xử lý phishing", "hình phạt lừa đảo"], 
-      a: "⚖️ **Khung pháp lý chống phishing**:\n• Computer Fraud and Abuse Act (Mỹ)\n• GDPR Article 32 (EU) - Bảo vệ dữ liệu\n• Luật An ninh mạng (Việt Nam) - Điều 290\n• Hình phạt: Phạt tiền, tù đến 20 năm tùy mức độ",
-      sources: [
-        { name: "Wikipedia - Cybercrime Law", url: "https://en.wikipedia.org/wiki/Computer_Fraud_and_Abuse_Act" },
-        { name: "HARVEST - Legal Aspects", url: "https://heinonline.org/HOL/LandingPage?handle=hein.journals/computer47&div=12" }
-      ]
     }
   ];
 
-  // --- SUGGESTED QUESTIONS - 2 CỘT ---
+  // --- SUGGESTED QUESTIONS ---
   const suggestedQuestions = [
     "Phishing Email là gì?",
-    "Các hình thức phishing?",
-    "Cách phòng chống phishing?",
-    "Dấu hiệu nhận biết?",
-    "Xử lý khi bị tấn công?",
-    "Công cụ chống phishing?",
-    "Thống kê phishing?",
-    "Luật pháp chống phishing?"
+    "Các hình thức phishing email?",
+    "Làm sao để đối phó phishing email?",
+    "Dấu hiệu nhận biết email lừa đảo?",
+    "Xử lý thế nào khi bị tấn công?"
   ];
 
   // Lấy các câu hỏi gợi ý chưa được hỏi
@@ -159,10 +133,7 @@ export default function PhishingAIChatbot() {
       'đối phó': 'cách đối phó',
       'phòng chống': 'cách đối phó',
       'nhận biết': 'dấu hiệu nhận biết',
-      'xử lý': 'xử lý khi bị tấn công',
-      'công cụ': 'công cụ chống phishing',
-      'thống kê': 'thống kê phishing',
-      'luật': 'luật pháp chống phishing'
+      'xử lý': 'xử lý khi bị tấn công'
     };
     
     for (const [word, topic] of Object.entries(commonKeywords)) {
@@ -249,17 +220,6 @@ export default function PhishingAIChatbot() {
   };
 
   const unaskedQuestions = getUnaskedSuggestedQuestions();
-
-  // Chia câu hỏi thành 2 cột
-  const splitQuestionsIntoColumns = (questions) => {
-    const midIndex = Math.ceil(questions.length / 2);
-    return {
-      column1: questions.slice(0, midIndex),
-      column2: questions.slice(midIndex)
-    };
-  };
-
-  const { column1, column2 } = splitQuestionsIntoColumns(unaskedQuestions);
 
   // Component hiển thị nguồn tham khảo
   const SourceLinks = ({ sources }) => {
@@ -408,37 +368,22 @@ export default function PhishingAIChatbot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* SUGGESTED QUESTIONS - BỐ CỤC 2 CỘT */}
+          {/* SUGGESTED QUESTIONS - CHỈ HIỆN CÂU CHƯA HỎI */}
           {showSuggestions && unaskedQuestions.length > 0 && (
             <div className="p-3 border-t bg-gray-100">
               <div className="text-xs text-gray-500 mb-2">
                 {messages.length === 0 ? "💡 Câu hỏi thường gặp:" : "💡 Câu hỏi gợi ý:"}
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {/* Cột 1 */}
-                <div className="space-y-2">
-                  {column1.map((q, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSend(q)}
-                      className="w-full text-left text-xs bg-white border px-2 py-2 rounded-lg hover:bg-blue-50 transition-colors hover:border-blue-300 text-gray-700"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-                {/* Cột 2 */}
-                <div className="space-y-2">
-                  {column2.map((q, i) => (
-                    <button
-                      key={i + column1.length}
-                      onClick={() => handleSend(q)}
-                      className="w-full text-left text-xs bg-white border px-2 py-2 rounded-lg hover:bg-blue-50 transition-colors hover:border-blue-300 text-gray-700"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex flex-col gap-2">
+                {unaskedQuestions.map((q, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSend(q)}
+                    className="text-left text-sm bg-white border px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors hover:border-blue-300 text-gray-700"
+                  >
+                    {q}
+                  </button>
+                ))}
               </div>
             </div>
           )}

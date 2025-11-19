@@ -1,4 +1,4 @@
-// App.jsx
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -7,9 +7,11 @@ import EmailAnalyzer from "./pages/EmailAnalyzer";
 import Profile from "./pages/Profile";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./context/AuthContext";
-import ChatBox from './components/ChatBox'; 
+import ChatBox from './components/ChatBox';
+import ZaloWidget from './components/ZaloWidget';
+import MessengerWidget from './components/MessengerWidget'; // THÊM DÒNG NÀY
 
-export default function App() {
+function App() {
   return (
     <AuthProvider>
       <Router>
@@ -23,13 +25,17 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/analyze" element={<EmailAnalyzer />} />
-            <Route path="/profile" element={<Profile />} /> {/* ✅ Hồ sơ người dùng */}
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </div>
 
-        {/* THÊM CHATBOX Ở ĐÂY - sẽ hiển thị trên tất cả các trang */}
+        {/* THÊM CÁC WIDGET Ở ĐÂY - sẽ hiển thị trên tất cả các trang */}
         <ChatBox />
+        <ZaloWidget />
+        <MessengerWidget /> {/* THÊM DÒNG NÀY */}
       </Router>
     </AuthProvider>
   );
 }
+
+export default App;
