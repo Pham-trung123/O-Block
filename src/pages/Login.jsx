@@ -165,112 +165,119 @@ export default function Login({ isPopup }) {
   // ========================
   // Form Login (UI đẹp)
   // ========================
-  const renderLoginForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-5">
+ const renderLoginForm = () => (
+  <form onSubmit={handleSubmit} className="space-y-5">
 
-      {/* EMAIL */}
-      <div>
-        <label className="block text-sm font-semibold mb-2 text-gray-700">
-          Email
-        </label>
+    {/* EMAIL */}
+    <div>
+      <label className="block text-sm font-semibold mb-2 text-gray-700">
+        Email
+      </label>
 
-        <div className="relative">
-          <span className="absolute left-3 top-3 text-gray-400">
-            <FaUser className="text-lg" />
-          </span>
+      <div className="relative">
+        <span className="absolute left-3 top-3 text-gray-400">
+          <FaUser className="text-lg" />
+        </span>
 
-          <input
-            type="email"
-            placeholder="Nhập email (Gmail)"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={`w-full bg-gray-50 border ${
-              errors.email ? "border-red-400" : "border-gray-200"
-            } rounded-xl p-3 pl-10 text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all`}
-          />
-        </div>
-        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-      </div>
-
-      {/* PASSWORD */}
-      <div>
-        <label className="block text-sm font-semibold mb-2 text-gray-700">
-          Mật khẩu
-        </label>
-
-        <div className="relative">
-          <span className="absolute left-3 top-3 text-gray-400">
-            <FaLock className="text-lg" />
-          </span>
-
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Mật khẩu"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`w-full bg-gray-50 border ${
-              errors.password ? "border-red-400" : "border-gray-200"
-            } rounded-xl p-3 pl-10 pr-10 text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all`}
-          />
-
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </button>
-        </div>
-
-        {errors.password && (
-          <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-        )}
-      </div>
-
-      {/* CAPTCHA */}
-      <div className="flex justify-center scale-95">
-        <ReCAPTCHA
-          sitekey={SITE_KEY}
-          onChange={(token) => setCaptchaToken(token)}
+        <input
+          type="email"
+          placeholder="Nhập email (Gmail)"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={`w-full bg-gray-50 border ${
+            errors.email ? "border-red-400" : "border-gray-200"
+          } rounded-xl p-3 pl-10 text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all`}
         />
       </div>
+      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+    </div>
 
-      {/* LOGIN BUTTON */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? (
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Đang đăng nhập...
-          </div>
-        ) : (
-          "Đăng nhập"
-        )}
-      </button>
+    {/* PASSWORD */}
+    <div>
+      <label className="block text-sm font-semibold mb-2 text-gray-700">
+        Mật khẩu
+      </label>
 
-      {/* FORGOT PASSWORD */}
-      <button
-        type="button"
-        onClick={handleSendOtp}
-        className="w-full text-purple-600 text-sm hover:text-purple-700 hover:underline text-center transition-colors"
-      >
-        Quên mật khẩu?
-      </button>
+      <div className="relative">
+        <span className="absolute left-3 top-3 text-gray-400">
+          <FaLock className="text-lg" />
+        </span>
 
-      {/* SOCIAL LOGIN */}
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Hoặc đăng nhập với</span>
-        </div>
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Mật khẩu"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={`w-full bg-gray-50 border ${
+            errors.password ? "border-red-400" : "border-gray-200"
+          } rounded-xl p-3 pl-10 pr-10 text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all`}
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          {showPassword ? <FaEyeSlash /> : <FaEye />}
+        </button>
       </div>
 
-      <div className="flex justify-center items-center gap-3">
+      {errors.password && (
+        <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+      )}
+    </div>
+
+    {/* CAPTCHA */}
+    <div className="flex justify-center scale-95">
+      <ReCAPTCHA
+        sitekey={SITE_KEY}
+        onChange={(token) => setCaptchaToken(token)}
+      />
+    </div>
+
+    {/* LOGIN BUTTON */}
+    <button
+      type="submit"
+      disabled={loading}
+      className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {loading ? (
+        <div className="flex items-center justify-center gap-2">
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          Đang đăng nhập...
+        </div>
+      ) : (
+        "Đăng nhập"
+      )}
+    </button>
+
+    {/* GENERAL ERROR */}
+    {errors.general && (
+      <div className="mt-2 w-full p-3 rounded-xl bg-red-100 border border-red-300 text-red-700 text-sm text-center animate-fadeIn">
+        {errors.general}
+      </div>
+    )}
+
+    {/* FORGOT PASSWORD */}
+    <button
+      type="button"
+      onClick={handleSendOtp}
+      className="w-full text-purple-600 text-sm hover:text-purple-700 hover:underline text-center transition-colors"
+    >
+      Quên mật khẩu?
+    </button>
+
+    {/* SOCIAL LOGIN */}
+    <div className="relative my-6">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-gray-300"></div>
+      </div>
+      <div className="relative flex justify-center text-sm">
+        <span className="px-2 bg-white text-gray-500">Hoặc đăng nhập với</span>
+      </div>
+    </div>
+
+    <div className="flex justify-center items-center gap-3">
         <button
           onClick={() => (window.location.href = "http://localhost:3000/auth/google/login")}
           className="w-12 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:scale-105"
