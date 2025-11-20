@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser, FaLock, FaGoogle, FaFacebook, FaGithub, FaLinkedin } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -25,10 +25,10 @@ export default function Login({ isPopup }) {
   const [message, setMessage] = useState("");
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+  
   const switchToRegister = () => {
-  window.location.href = "/register";
-};
-
+    window.location.href = "/register";
+  };
 
   // ========================
   // Đăng nhập
@@ -170,13 +170,13 @@ export default function Login({ isPopup }) {
 
       {/* EMAIL */}
       <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
+        <label className="block text-sm font-semibold mb-2 text-gray-700">
           Email
         </label>
 
         <div className="relative">
-          <span className="absolute left-3 top-3 text-gray-400 text-lg">
-            <i className="fa-solid fa-user"></i>
+          <span className="absolute left-3 top-3 text-gray-400">
+            <FaUser className="text-lg" />
           </span>
 
           <input
@@ -184,23 +184,23 @@ export default function Login({ isPopup }) {
             placeholder="Nhập email (Gmail)"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`w-full bg-gray-100 border ${
-              errors.email ? "border-red-400" : "border-gray-300"
-            } rounded-lg p-3 pl-10 text-gray-800`}
+            className={`w-full bg-gray-50 border ${
+              errors.email ? "border-red-400" : "border-gray-200"
+            } rounded-xl p-3 pl-10 text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all`}
           />
         </div>
-        {errors.email && <p className="text-red-400 text-sm">{errors.email}</p>}
+        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
       </div>
 
       {/* PASSWORD */}
       <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
+        <label className="block text-sm font-semibold mb-2 text-gray-700">
           Mật khẩu
         </label>
 
         <div className="relative">
-          <span className="absolute left-3 top-3 text-gray-400 text-lg">
-            <i className="fa-solid fa-lock"></i>
+          <span className="absolute left-3 top-3 text-gray-400">
+            <FaLock className="text-lg" />
           </span>
 
           <input
@@ -208,27 +208,27 @@ export default function Login({ isPopup }) {
             placeholder="Mật khẩu"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`w-full bg-gray-100 border ${
-              errors.password ? "border-red-400" : "border-gray-300"
-            } rounded-lg p-3 pl-10 pr-10 text-gray-800`}
+            className={`w-full bg-gray-50 border ${
+              errors.password ? "border-red-400" : "border-gray-200"
+            } rounded-xl p-3 pl-10 pr-10 text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all`}
           />
 
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-500"
+            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition-colors"
           >
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
         </div>
 
         {errors.password && (
-          <p className="text-red-400 text-sm">{errors.password}</p>
+          <p className="text-red-500 text-sm mt-1">{errors.password}</p>
         )}
       </div>
 
       {/* CAPTCHA */}
-      <div className="flex justify-center scale-[0.9]">
+      <div className="flex justify-center scale-95">
         <ReCAPTCHA
           sitekey={SITE_KEY}
           onChange={(token) => setCaptchaToken(token)}
@@ -238,58 +238,62 @@ export default function Login({ isPopup }) {
       {/* LOGIN BUTTON */}
       <button
         type="submit"
-        className="w-full py-3 bg-gradient-to-r from-blue-900 via-blue-700 to-cyan-400
-        text-white font-bold rounded-lg shadow-lg hover:scale-[1.02] transition"
+        disabled={loading}
+        className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? "Đang đăng nhập..." : "Login"}
+        {loading ? (
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Đang đăng nhập...
+          </div>
+        ) : (
+          "Đăng nhập"
+        )}
       </button>
 
       {/* FORGOT PASSWORD */}
       <button
         type="button"
         onClick={handleSendOtp}
-        className="w-full text-blue-600 text-sm hover:underline text-center"
+        className="w-full text-purple-600 text-sm hover:text-purple-700 hover:underline text-center transition-colors"
       >
         Quên mật khẩu?
       </button>
 
       {/* SOCIAL LOGIN */}
-      <p className="text-center text-gray-600 text-sm mt-4">
-        or login with social platforms
-      </p>
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">Hoặc đăng nhập với</span>
+        </div>
+      </div>
 
-      <div className="flex justify-center items-center space-x-4 mt-2">
+      <div className="flex justify-center items-center gap-3">
         <button
-          onClick={() =>
-            (window.location.href = "http://localhost:3000/auth/google/login")
-          }
-          className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
+          onClick={() => (window.location.href = "http://localhost:3000/auth/google/login")}
+          className="w-12 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:scale-105"
         >
-          <i className="fa-brands fa-google text-xl"></i>
+          <FaGoogle className="text-red-500 text-xl" />
         </button>
 
         <button
-          onClick={() =>
-            (window.location.href =
-              "http://localhost:3000/auth/facebook/login")
-          }
-          className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
+          onClick={() => (window.location.href = "http://localhost:3000/auth/facebook/login")}
+          className="w-12 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:scale-105"
         >
-          <i className="fa-brands fa-facebook text-xl"></i>
+          <FaFacebook className="text-blue-600 text-xl" />
         </button>
 
         <button
-          onClick={() =>
-            (window.location.href =
-              "http://localhost:3000/auth/github/login")
-          }
-          className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
+          onClick={() => (window.location.href = "http://localhost:3000/auth/github/login")}
+          className="w-12 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:scale-105"
         >
-          <i className="fa-brands fa-github text-xl"></i>
+          <FaGithub className="text-gray-800 text-xl" />
         </button>
 
-        <button className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100">
-          <i className="fa-brands fa-linkedin text-xl"></i>
+        <button className="w-12 h-12 border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:scale-105">
+          <FaLinkedin className="text-blue-700 text-xl" />
         </button>
       </div>
     </form>
@@ -300,10 +304,12 @@ export default function Login({ isPopup }) {
   // ========================
   const renderOtpForm = () => (
     <div className="space-y-4">
-      <h3 className="text-xl font-bold text-gray-700 text-center">Xác minh OTP</h3>
+      <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent text-center">
+        Xác minh OTP
+      </h3>
 
-      <p className="text-gray-600 text-center">
-        Mã OTP đã gửi tới <b>{email}</b>
+      <p className="text-gray-600 text-center text-sm">
+        Mã OTP đã gửi tới <b className="text-purple-600">{email}</b>
       </p>
 
       <input
@@ -311,25 +317,32 @@ export default function Login({ isPopup }) {
         maxLength={4}
         value={otp}
         onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-        className="w-full bg-gray-100 border rounded-lg p-3 text-center text-gray-800"
-        placeholder="Nhập OTP"
+        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-center text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+        placeholder="Nhập OTP 4 số"
       />
 
       <button
         onClick={handleVerifyOtp}
-        className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg"
+        disabled={loading}
+        className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
       >
-        Xác minh
+        {loading ? "Đang xác minh..." : "Xác minh OTP"}
       </button>
 
       <button
         onClick={() => setStep(1)}
-        className="text-center w-full text-gray-600 hover:underline"
+        className="text-center w-full text-gray-600 hover:text-purple-600 hover:underline transition-colors"
       >
-        Hủy
+        Quay lại đăng nhập
       </button>
 
-      {message && <p className="text-center text-blue-600">{message}</p>}
+      {message && (
+        <p className={`text-center text-sm ${
+          message.includes("thành công") ? "text-green-600" : "text-blue-600"
+        }`}>
+          {message}
+        </p>
+      )}
     </div>
   );
 
@@ -338,7 +351,7 @@ export default function Login({ isPopup }) {
   // ========================
   const renderResetForm = () => (
     <div className="space-y-4">
-      <h3 className="text-xl font-bold text-gray-700 text-center">
+      <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent text-center">
         Đổi mật khẩu mới
       </h3>
 
@@ -347,7 +360,7 @@ export default function Login({ isPopup }) {
         placeholder="Mật khẩu mới"
         value={newPassword}
         onChange={(e) => setNewPassword(e.target.value)}
-        className="w-full bg-gray-100 border rounded-lg p-3 text-gray-800"
+        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
       />
 
       <input
@@ -355,71 +368,87 @@ export default function Login({ isPopup }) {
         placeholder="Nhập lại mật khẩu"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
-        className="w-full bg-gray-100 border rounded-lg p-3 text-gray-800"
+        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
       />
 
       <button
         onClick={handleResetPassword}
-        className="w-full py-3 bg-green-600 text-white font-bold rounded-lg"
+        disabled={loading}
+        className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
       >
-        Xác nhận đổi mật khẩu
+        {loading ? "Đang xử lý..." : "Xác nhận đổi mật khẩu"}
       </button>
 
       {message && (
-        <p className="text-center text-blue-600 text-sm">{message}</p>
+        <p className={`text-center text-sm ${
+          message.includes("thành công") ? "text-green-600" : "text-blue-600"
+        }`}>
+          {message}
+        </p>
       )}
     </div>
-    
   );
-if (isPopup) {
-  return (
-    <div className="p-2 w-full">
-      {renderLoginForm()}
-    </div>
-  );
-}
+
+  if (isPopup) {
+    return (
+      <div className="p-2 w-full">
+        {renderLoginForm()}
+      </div>
+    );
+  }
 
   // ========================
   // UI MAIN
   // ========================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 py-8">
 
       {/* CARD LOGIN */}
-      <div className="w-[850px] h-[550px] bg-white rounded-3xl shadow-2xl flex overflow-hidden">
+      <div className="w-full max-w-4xl bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 flex overflow-hidden">
 
-        {/* LEFT PANEL */}
-        <div className="w-[45%] bg-gradient-to-br from-cyan-400 to-blue-600 
-            flex flex-col items-center justify-center text-white px-10">
+        {/* LEFT PANEL - GRADIENT */}
+        <div className="hidden md:flex w-[45%] bg-gradient-to-br from-purple-600 via-purple-700 to-blue-600 flex-col items-center justify-center text-white px-8 relative overflow-hidden">
+          {/* Background Decorations */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-xl"></div>
+            <div className="absolute bottom-10 right-10 w-40 h-40 bg-cyan-400 rounded-full blur-xl"></div>
+          </div>
+          
+          <div className="relative z-10 text-center">
+            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <FaLock className="text-white text-2xl" />
+            </div>
+            <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
+              Chào mừng trở lại!
+            </h2>
+            <p className="text-blue-100 text-sm mb-6">
+              Đăng nhập để tiếp tục bảo vệ email của bạn
+            </p>
 
-          <h2 className="text-3xl font-bold mb-3">Hello, Welcome</h2>
-
-          <p className="text-center text-sm opacity-90">
-            Don't have an account?
-          </p>
-
-          {/* 👉 NÚT chuyển sang REGISTER đặt NGAY TẠI ĐÂY */}
-          <button
-            type="button"
-            onClick={switchToRegister}
-            className="mt-4 px-6 py-2 border border-white rounded-full 
-              text-white font-semibold hover:bg-white hover:text-blue-700
-              transition-all duration-300"
-          >
-            Register
-          </button>
-
+            <button
+              type="button"
+              onClick={switchToRegister}
+              className="px-8 py-3 border-2 border-white/30 rounded-xl text-white font-semibold hover:bg-white/10 hover:border-white/50 transition-all duration-300 backdrop-blur-sm"
+            >
+              Tạo tài khoản mới
+            </button>
+          </div>
         </div>
 
-
-        {/* RIGHT PANEL */}
-        <div className="w-[55%] p-10 bg-white flex flex-col justify-center">
-
-          <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-            {step === 1 && "Login"}
-            {step === 2 && "Verify OTP"}
-            {step === 3 && "Reset Password"}
-          </h2>
+        {/* RIGHT PANEL - FORM */}
+        <div className="w-full md:w-[55%] p-8 md:p-12 bg-white flex flex-col justify-center">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-purple-600 bg-clip-text text-transparent">
+              {step === 1 && "Đăng nhập"}
+              {step === 2 && "Xác minh OTP"}
+              {step === 3 && "Đổi mật khẩu"}
+            </h2>
+            <p className="text-gray-600 mt-2">
+              {step === 1 && "Đăng nhập để truy cập hệ thống"}
+              {step === 2 && "Nhập mã xác minh từ email"}
+              {step === 3 && "Tạo mật khẩu mới cho tài khoản"}
+            </p>
+          </div>
 
           {step === 1 && renderLoginForm()}
           {step === 2 && renderOtpForm()}

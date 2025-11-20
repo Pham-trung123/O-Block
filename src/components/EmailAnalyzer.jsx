@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { FiAlertTriangle, FiCheck, FiX, FiChevronLeft, FiChevronRight, FiMail, FiShield, FiBarChart2, FiExternalLink, FiLoader, FiClock, FiUser, FiCalendar } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function EmailAnalyzer() {
   const { user } = useAuth();
@@ -21,6 +23,7 @@ export default function EmailAnalyzer() {
 
   // ⭐ mở/đóng UI phân tích
   const [isOpen, setIsOpen] = useState({});
+  const [scanningProgress, setScanningProgress] = useState(0);
 
   // ⭐ Danh sách 10 tiêu chí
   const criteriaList = [
@@ -175,17 +178,21 @@ export default function EmailAnalyzer() {
       return alert("Vui lòng chọn email để quét!");
 
     setLoading(true);
+    setScanningProgress(0);
 
     try {
-      for (const id of selected) {
+      for (let i = 0; i < selected.length; i++) {
+        const id = selected[i];
         if (results[id]) continue;
         const email = allEmails.find((e) => e.id === id);
         if (email) {
           await handleAnalyze(email.snippet || email.body, id);
         }
+        setScanningProgress(((i + 1) / selected.length) * 100);
       }
     } finally {
       setLoading(false);
+      setScanningProgress(0);
     }
   };
 
@@ -211,15 +218,54 @@ export default function EmailAnalyzer() {
 
   const riskColor = (level) => {
     switch (level) {
-      case "HIGH":
       case "CRITICAL":
-        return "bg-red-50 border-red-400 text-red-700";
+        return "bg-gradient-to-br from-red-50 to-orange-50 border-red-200 text-red-800 shadow-lg";
+      case "HIGH":
+        return "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-800 shadow-md";
       case "MEDIUM":
-        return "bg-yellow-50 border-yellow-400 text-yellow-700";
+        return "bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200 text-yellow-800 shadow-sm";
       case "LOW":
-        return "bg-green-50 border-green-400 text-green-700";
+        return "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 text-green-800 shadow-sm";
       default:
-        return "bg-gray-50 border-gray-300";
+        return "bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200 text-gray-800";
+    }
+  };
+
+  const riskBadgeColor = (level) => {
+    switch (level) {
+      case "CRITICAL":
+        return "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg";
+      case "HIGH":
+        return "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md";
+      case "MEDIUM":
+        return "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-sm";
+      case "LOW":
+        return "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-sm";
+      default:
+        return "bg-gradient-to-r from-gray-500 to-gray-600 text-white";
+    }
+  };
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
     }
   };
 
@@ -228,14 +274,45 @@ export default function EmailAnalyzer() {
   // =============================
   if (!user) {
     return (
-      <section className="max-w-3xl mx-auto mt-20 p-10 bg-white rounded-xl shadow-md text-center">
-        <h2 className="text-2xl font-bold text-indigo-700 mb-4">
-          🔐 Truy cập bị giới hạn
-        </h2>
-        <p className="text-gray-600">
-          Vui lòng <a href="/login" className="text-indigo-600">đăng nhập</a>
-        </p>
-      </section>
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-2xl mx-auto mt-20 p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 text-center"
+      >
+        <motion.div
+          className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl"
+          whileHover={{ scale: 1.05, rotate: 5 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <FiShield className="text-white text-3xl" />
+        </motion.div>
+        <motion.h2
+          className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-red-600 bg-clip-text text-transparent mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          Truy cập bị giới hạn
+        </motion.h2>
+        <motion.p
+          className="text-gray-600 mb-8 text-lg"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Vui lòng đăng nhập để sử dụng tính năng phân tích email AI
+        </motion.p>
+        <motion.a
+          href="/login"
+          className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-2xl font-bold hover:shadow-2xl transition-all duration-300 hover:from-purple-700 hover:to-blue-600 transform hover:-translate-y-1"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FiMail className="text-xl" />
+          Đăng nhập ngay
+        </motion.a>
+      </motion.section>
     );
   }
 
@@ -243,47 +320,171 @@ export default function EmailAnalyzer() {
   // ⭐ UI chính
   // =============================
   return (
-    <section className="max-w-5xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold text-indigo-700 mb-6 text-center">
-        ✉️ Trình Phân Tích Email Lừa Đảo
-      </h2>
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-7xl mx-auto mt-8 p-6 bg-white rounded-3xl shadow-2xl border border-gray-100"
+    >
+      {/* Header */}
+      <motion.div
+        className="text-center mb-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <motion.div
+            className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-2xl"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <FiShield className="text-white text-2xl" />
+          </motion.div>
+          <h1 className="text-4xl font-black bg-gradient-to-r from-slate-800 to-purple-600 bg-clip-text text-transparent">
+            Phân Tích Email Lừa Đảo
+          </h1>
+        </div>
+        <motion.p
+          className="text-gray-600 max-w-3xl mx-auto text-lg leading-relaxed"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Sử dụng <span className="font-bold text-purple-600">AI tiên tiến</span> để phát hiện và cảnh báo các email đáng ngờ. 
+          Bảo vệ bạn khỏi các cuộc tấn công mạng tinh vi với độ chính xác 99.8%.
+        </motion.p>
+      </motion.div>
 
       {allEmails.length === 0 ? (
-        <button
-          onClick={() =>
-            (window.location.href = "http://localhost:3000/api/gmail/login")
-          }
-          className="bg-green-600 text-white px-4 py-2 rounded-lg"
+        <motion.div
+          className="text-center py-16"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
         >
-          📩 Kết nối Gmail
-        </button>
+          <motion.div
+            className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl"
+            whileHover={{ scale: 1.1 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <FiMail className="text-blue-500 text-3xl" />
+          </motion.div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">Chưa kết nối Gmail</h3>
+          <p className="text-gray-600 mb-8 text-lg">Kết nối với Gmail để bắt đầu phân tích email bằng AI</p>
+          <motion.button
+            onClick={() => (window.location.href = "http://localhost:3000/api/gmail/login")}
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold hover:shadow-2xl transition-all duration-300 hover:from-green-600 hover:to-emerald-700 transform hover:-translate-y-1"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FiExternalLink className="text-xl" />
+            Kết nối Gmail
+          </motion.button>
+        </motion.div>
       ) : (
         <>
-          {/* Actions */}
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-lg font-semibold">📥 Email gần đây:</h3>
-
-            <div className="flex gap-3">
-              <button
-                onClick={toggleSelectAll}
-                className="bg-gray-200 px-3 py-1 rounded-lg"
-              >
-                {selected.length === displayEmails.length
-                  ? "☑ Bỏ chọn"
-                  : "✅ Chọn trang này"}
-              </button>
-
-              <button
-                onClick={handleAnalyzeSelected}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
-              >
-                🤖 Quét AI ({selected.length})
-              </button>
+          {/* Stats và Actions */}
+          <motion.div
+            className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100 shadow-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3 mb-2">
+                <motion.div
+                  animate={{ rotate: [0, 10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <FiBarChart2 className="text-blue-500 text-2xl" />
+                </motion.div>
+                Email gần đây
+              </h3>
+              <p className="text-gray-600 flex items-center gap-2">
+                <FiMail className="text-purple-500" />
+                Đã tải {allEmails.length} email • {selected.length} được chọn
+              </p>
             </div>
-          </div>
+
+            <div className="flex flex-wrap gap-4">
+              <motion.button
+                onClick={toggleSelectAll}
+                className="flex items-center gap-3 px-5 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {selected.length === displayEmails.length ? (
+                  <>
+                    <FiX className="text-xl" />
+                    Bỏ chọn trang
+                  </>
+                ) : (
+                  <>
+                    <FiCheck className="text-xl" />
+                    Chọn trang này
+                  </>
+                )}
+              </motion.button>
+
+              <motion.button
+                onClick={handleAnalyzeSelected}
+                disabled={selected.length === 0 || loading}
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-xl hover:shadow-2xl transition-all duration-300 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={{ scale: selected.length > 0 && !loading ? 1.05 : 1, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.div
+                  animate={loading ? { rotate: 360 } : {}}
+                  transition={{ duration: 2, repeat: loading ? Infinity : 0 }}
+                >
+                  <FiShield className="text-xl" />
+                </motion.div>
+                Quét AI ({selected.length})
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Scanning Progress */}
+          <AnimatePresence>
+            {scanningProgress > 0 && scanningProgress < 100 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl border border-purple-200"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <FiLoader className="text-purple-500 text-xl" />
+                  </motion.div>
+                  <span className="font-semibold text-purple-700">Đang quét {selected.length} email...</span>
+                </div>
+                <div className="w-full bg-white rounded-full h-3 overflow-hidden shadow-inner">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${scanningProgress}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+                <div className="text-right text-sm text-purple-600 mt-1 font-medium">
+                  {Math.round(scanningProgress)}%
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* List email */}
-          <ul className="border rounded-lg divide-y">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="border border-gray-200 rounded-2xl divide-y divide-gray-100 bg-white shadow-lg overflow-hidden"
+          >
             {displayEmails.map((email) => {
               const emailResult = results[email.id];
 
@@ -301,179 +502,396 @@ export default function EmailAnalyzer() {
               const finalRisk = riskLevelFromCriteriaScore(criteriaScore);
 
               return (
-                <li key={email.id} className="p-3 flex flex-col">
-                  <div className="flex justify-between items-center">
-                    <div className="flex gap-3 items-center">
-                      <input
+                <motion.div
+                  key={email.id}
+                  variants={itemVariants}
+                  className="p-6 hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/30 transition-all duration-300 border-l-4 border-transparent hover:border-purple-400"
+                >
+                  <div className="flex justify-between items-start gap-6">
+                    <div className="flex gap-4 items-start flex-1 min-w-0">
+                      <motion.input
                         type="checkbox"
                         checked={selected.includes(email.id)}
                         onChange={() => toggleSelect(email.id)}
+                        className="mt-2 w-5 h-5 text-purple-600 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       />
 
-                      <div
-                        className="cursor-pointer"
-                        onClick={() =>
-                          handleAnalyze(email.snippet || email.body, email.id)
-                        }
-                      >
-                        <b>{email.subject}</b> —{" "}
-                        <span className="text-gray-600">{email.from}</span>
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleAnalyze(email.snippet || email.body, email.id)}>
+                        <div className="flex items-center gap-3 mb-3">
+                          <h4 className="font-bold text-gray-900 text-lg truncate flex items-center gap-2">
+                            <FiMail className="text-blue-500 flex-shrink-0" />
+                            {email.subject}
+                          </h4>
+                          {emailResult && (
+                            <motion.span
+                              className={`px-3 py-1.5 text-sm font-bold rounded-full ${riskBadgeColor(finalRisk)} shadow-lg`}
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 500 }}
+                            >
+                              {finalRisk}
+                            </motion.span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
+                          <span className="flex items-center gap-2">
+                            <FiUser className="text-purple-500" />
+                            {email.from}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <FiCalendar className="text-green-500" />
+                            {new Date(email.date).toLocaleString('vi-VN')}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 line-clamp-2 bg-gray-50/50 p-2 rounded-lg">
+                          {email.snippet}
+                        </p>
                       </div>
                     </div>
 
-                    <span className="text-xs text-gray-400">
-                      {new Date(email.date).toLocaleString()}
-                    </span>
+                    <motion.button
+                      onClick={() => handleAnalyze(email.snippet || email.body, email.id)}
+                      disabled={itemLoading[email.id]}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm rounded-xl hover:shadow-xl transition-all duration-300 disabled:opacity-50 font-semibold min-w-[140px] justify-center"
+                      whileHover={{ scale: itemLoading[email.id] ? 1 : 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {itemLoading[email.id] ? (
+                        <>
+                          <motion.div
+                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          />
+                          Đang phân tích...
+                        </>
+                      ) : (
+                        <>
+                          <FiShield className="text-base" />
+                          {emailResult ? 'Phân tích lại' : 'Phân tích'}
+                        </>
+                      )}
+                    </motion.button>
                   </div>
 
-                  {/* progress bar */}
+                  {/* Progress bar */}
                   {itemLoading[email.id] && (
-                    <div className="w-full bg-gray-200 h-2 rounded mt-2 overflow-hidden">
-                      <div
-                        className="h-full bg-indigo-500 transition-all"
-                        style={{ width: `${progress[email.id] || 0}%` }}
-                      />
-                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-4"
+                    >
+                      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden shadow-inner">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                          initial={{ width: "0%" }}
+                          animate={{ width: `${progress[email.id] || 0}%` }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </div>
+                      <div className="text-right text-xs text-gray-500 mt-1">
+                        {Math.round(progress[email.id] || 0)}%
+                      </div>
+                    </motion.div>
                   )}
 
                   {/* Nút xem lại nếu đã phân tích */}
                   {!isOpen[email.id] && results[email.id] && (
-                    <button
-                      onClick={() =>
-                        setIsOpen((prev) => ({ ...prev, [email.id]: true }))
-                      }
-                      className="mt-2 text-indigo-600 text-sm underline"
+                    <motion.button
+                      onClick={() => setIsOpen((prev) => ({ ...prev, [email.id]: true }))}
+                      className="mt-3 text-sm text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-2 transition-colors group"
+                      whileHover={{ x: 5 }}
                     >
-                      👁 Xem kết quả phân tích
-                    </button>
+                      <motion.span
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        👁
+                      </motion.span>
+                      Xem kết quả phân tích chi tiết
+                      <FiChevronRight className="text-lg group-hover:translate-x-1 transition-transform" />
+                    </motion.button>
                   )}
 
                   {/* KẾT QUẢ */}
-                  {isOpen[email.id] && emailResult && (
-                    <div
-                      className={`mt-3 p-4 border rounded-lg relative ${riskColor(
-                        finalRisk
-                      )}`}
-                    >
-                      {/* nút đóng */}
-                      <button
-                        onClick={() =>
-                          setIsOpen((prev) => ({
-                            ...prev,
-                            [email.id]: false,
-                          }))
-                        }
-                        className="absolute right-2 top-2 text-gray-500 hover:text-gray-700 text-lg"
+                  <AnimatePresence>
+                    {isOpen[email.id] && emailResult && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className={`mt-6 p-6 rounded-2xl border-2 relative overflow-hidden ${riskColor(finalRisk)}`}
                       >
-                        ×
-                      </button>
+                        {/* Background pattern */}
+                        <div className="absolute inset-0 opacity-5">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-current rounded-full -translate-y-16 translate-x-16"></div>
+                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-current rounded-full translate-y-12 -translate-x-12"></div>
+                        </div>
 
-                      {/* ALERT */}
-                      <h3 className="font-bold text-lg">
-                        🔴 Rủi ro: {finalRisk} ({criteriaScore}%)
-                      </h3>
+                        {/* nút đóng */}
+                        <motion.button
+                          onClick={() => setIsOpen((prev) => ({ ...prev, [email.id]: false }))}
+                          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-white/50 z-10"
+                          whileHover={{ scale: 1.1, rotate: 90 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <FiX className="text-xl" />
+                        </motion.button>
 
-                      {/* Không hiển thị dòng người gửi */}
-                      {/* Không hiển thị điểm tổng */}
+                        {/* Header kết quả */}
+                        <div className="flex items-center gap-4 mb-6 relative z-10">
+                          <motion.div
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl ${riskBadgeColor(finalRisk)}`}
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
+                            <FiAlertTriangle className="text-xl" />
+                          </motion.div>
+                          <div>
+                            <motion.h3
+                              className="font-black text-2xl mb-1"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                            >
+                              Mức độ rủi ro: {finalRisk}
+                            </motion.h3>
+                            <motion.p
+                              className="text-lg font-semibold opacity-80"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.2 }}
+                            >
+                              Điểm đánh giá: {criteriaScore}%
+                            </motion.p>
+                          </div>
+                        </div>
 
-                      {/* BẢNG TIÊU CHÍ */}
-                      <div className="mt-4 bg-white border rounded-lg p-3">
-                        <h4 className="font-semibold mb-3">
-                          🔎 Đánh giá theo 10 tiêu chí
-                        </h4>
+                        {/* BẢNG TIÊU CHÍ */}
+                        <motion.div
+                          className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-5 relative z-10"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-3 text-lg">
+                            <motion.div
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              <FiCheck className="text-green-500 text-xl" />
+                            </motion.div>
+                            Đánh giá theo 10 tiêu chí AI
+                          </h4>
 
-                        <table className="w-full text-left">
-                          <thead>
-                            <tr className="border-b text-gray-700">
-                              <th className="py-2 font-semibold">Tiêu chí</th>
-                              <th className="py-2 font-semibold text-center w-20">
-                                Kết quả
-                              </th>
-                            </tr>
-                          </thead>
-
-                          <tbody>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {criteriaList.map((item, idx) => (
-                              <tr key={idx} className="border-b">
-                                <td className="py-2">{item}</td>
-                                <td className="py-2 text-center">
-                                  {criteriaStates[item] ? (
-                                    <span className="text-purple-600 text-lg">
-                                      ✔️
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-400 text-lg">
-                                      —
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
+                              <motion.div
+                                key={idx}
+                                className={`flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
+                                  criteriaStates[item] 
+                                    ? 'bg-red-50 border border-red-200' 
+                                    : 'bg-green-50 border border-green-200'
+                                }`}
+                                whileHover={{ scale: 1.02, x: 5 }}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.4 + idx * 0.1 }}
+                              >
+                                <span className={`text-sm font-medium ${
+                                  criteriaStates[item] ? 'text-red-700' : 'text-green-700'
+                                }`}>
+                                  {item}
+                                </span>
+                                <motion.div
+                                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
+                                    criteriaStates[item] 
+                                      ? 'bg-red-500 text-white' 
+                                      : 'bg-green-500 text-white'
+                                  }`}
+                                  whileHover={{ scale: 1.2 }}
+                                >
+                                  {criteriaStates[item] ? '!' : '✓'}
+                                </motion.div>
+                              </motion.div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
+                          </div>
+                        </motion.div>
 
-                      {/* Khuyến nghị */}
-                      <ul className="list-disc ml-6 mt-3 text-sm">
-                        {emailResult.recommendations?.map((r, i) => (
-                          <li key={i}>{r}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </li>
+                        {/* Khuyến nghị */}
+                        {emailResult.recommendations?.length > 0 && (
+                          <motion.div
+                            className="mt-6 relative z-10"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.8 }}
+                          >
+                            <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-3 text-lg">
+                              <FiAlertTriangle className="text-orange-500 text-xl" />
+                              Khuyến nghị bảo mật:
+                            </h4>
+                            <ul className="space-y-2">
+                              {emailResult.recommendations?.map((r, i) => (
+                                <motion.li
+                                  key={i}
+                                  className="text-gray-700 flex items-start gap-3 p-2 rounded-lg bg-white/50 backdrop-blur-sm"
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.9 + i * 0.1 }}
+                                >
+                                  <span className="text-purple-500 font-bold mt-0.5">•</span>
+                                  {r}
+                                </motion.li>
+                              ))}
+                            </ul>
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               );
             })}
-          </ul>
+          </motion.div>
 
           {/* Pagination */}
-          <div className="flex justify-center gap-2 mt-5">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              ⬅ Prev
-            </button>
-
-            {[...Array(totalPages)].map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentPage(idx + 1)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === idx + 1
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200"
-                }`}
+          <motion.div
+            className="flex flex-col sm:flex-row justify-between items-center gap-6 mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <div className="text-gray-600 flex items-center gap-2">
+              <FiClock className="text-purple-500" />
+              Hiển thị {(currentPage - 1) * emailsPerPage + 1} - {Math.min(currentPage * emailsPerPage, allEmails.length)} của {allEmails.length} email
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <motion.button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
+                whileHover={{ scale: currentPage !== 1 ? 1.05 : 1, x: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {idx + 1}
-              </button>
-            ))}
+                <FiChevronLeft className="text-xl" />
+                Trước
+              </motion.button>
 
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next ➡
-            </button>
-          </div>
+              {[...Array(totalPages)].map((_, idx) => (
+                <motion.button
+                  key={idx}
+                  onClick={() => setCurrentPage(idx + 1)}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
+                    currentPage === idx + 1
+                      ? "bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-2xl transform scale-105"
+                      : "bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:shadow-lg"
+                  }`}
+                  whileHover={{ scale: 1.05, y: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {idx + 1}
+                </motion.button>
+              ))}
+
+              <motion.button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
+                whileHover={{ scale: currentPage !== totalPages ? 1.05 : 1, x: 2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Sau
+                <FiChevronRight className="text-xl" />
+              </motion.button>
+            </div>
+          </motion.div>
 
           {nextPageToken && (
-            <div className="text-center mt-4">
-              <button
+            <motion.div
+              className="text-center mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <motion.button
                 onClick={() => fetchEmails(nextPageToken)}
-                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                className="px-6 py-3 bg-gradient-to-r from-gray-600 to-slate-700 text-white rounded-xl font-semibold hover:shadow-2xl transition-all duration-300 flex items-center gap-3 mx-auto"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
+                <FiMail className="text-lg" />
                 📄 Tải thêm email
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )}
         </>
       )}
 
-      {loading && <p className="text-blue-500 mt-3">🔄 Đang xử lý...</p>}
-      {error && <p className="text-red-500 mt-3">{error}</p>}
-    </section>
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-4"
+            >
+              <motion.div
+                className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
+              <motion.h3
+                className="text-xl font-bold text-gray-800"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                Đang xử lý...
+              </motion.h3>
+              <motion.p
+                className="text-gray-600 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                Hệ thống AI đang phân tích email của bạn
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Error Message */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="mt-6 p-6 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 text-red-700 rounded-2xl flex items-center gap-4 shadow-lg"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <FiAlertTriangle className="text-red-500 text-2xl flex-shrink-0" />
+            </motion.div>
+            <div>
+              <h4 className="font-bold text-lg mb-1">Lỗi hệ thống</h4>
+              <p>{error}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.section>
   );
 }

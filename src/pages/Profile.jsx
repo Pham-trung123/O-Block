@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { FiUser, FiMail, FiLock, FiArrowLeft, FiLogOut, FiShield, FiCheckCircle } from "react-icons/fi";
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -101,130 +102,205 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-300 via-purple-300 to-indigo-100 flex justify-center items-center p-6">
-      <div className="bg-white/30 backdrop-blur-md rounded-2xl shadow-lg w-full max-w-md p-8 border border-white/40">
-        <h2 className="text-2xl font-bold text-indigo-800 text-center mb-6">
-          Hồ sơ người dùng
-        </h2>
-
-        {/* Thông tin tài khoản */}
-        <div className="mb-4">
-          <p className="text-gray-700 font-semibold mb-1">Tên đăng nhập:</p>
-          <div className="bg-white/50 rounded-lg p-3 text-gray-900 border border-gray-200">
-            {user.username || user.fullname || "Không xác định"}
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <p className="text-gray-700 font-semibold mb-1">Email:</p>
-          <div className="bg-white/50 rounded-lg p-3 text-gray-900 border border-gray-200">
-            {user.email}
-          </div>
-        </div>
-
-        <hr className="my-5 border-gray-300" />
-
-        {/* 🔐 Đổi mật khẩu có OTP */}
-        {step === 1 && (
-          <div className="text-center">
-            <button
-              onClick={handleSendOtp}
-              disabled={loading}
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-2 px-4 rounded-md shadow-md transition"
-            >
-              {loading ? "Đang gửi mã..." : "Đổi mật khẩu 🔐"}
-            </button>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="mt-4">
-            <p className="text-gray-700 font-semibold mb-1">
-              Nhập mã OTP đã gửi qua email:
-            </p>
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-indigo-400 outline-none"
-              placeholder="Mã gồm 4 số"
-            />
-            <div className="flex justify-between">
-              <button
-                onClick={handleVerifyOtp}
-                disabled={loading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition"
-              >
-                {loading ? "Đang xác minh..." : "Xác minh OTP"}
-              </button>
-              <button
-                onClick={() => {
-                  setStep(1);
-                  setOtp("");
-                  setMessage("");
-                }}
-                className="text-gray-600 hover:underline px-3 py-2"
-              >
-                Hủy
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 flex justify-center items-center p-6">
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-md border border-white/60">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-blue-500 rounded-t-2xl p-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <FiUser className="text-2xl" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Hồ sơ người dùng</h2>
+              <p className="text-blue-100 text-sm">Quản lý thông tin tài khoản</p>
             </div>
           </div>
-        )}
+        </div>
 
-        {step === 3 && (
-          <div className="mt-4">
-            <p className="text-gray-700 font-semibold mb-1">Mật khẩu mới:</p>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-indigo-400 outline-none"
-            />
-            <p className="text-gray-700 font-semibold mb-1">
-              Xác nhận mật khẩu mới:
-            </p>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:ring-2 focus:ring-indigo-400 outline-none"
-            />
+        <div className="p-6">
+          {/* Thông tin tài khoản */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiUser className="text-purple-600 text-lg" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Tên đăng nhập</p>
+                <p className="font-semibold text-gray-800">
+                  {user.username || user.fullname || "Không xác định"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiMail className="text-blue-600 text-lg" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="font-semibold text-gray-800">{user.email}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 🔐 Đổi mật khẩu có OTP */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <FiShield className="text-purple-500" />
+              Bảo mật tài khoản
+            </h3>
+
+            {step === 1 && (
+              <div className="text-center">
+                <button
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Đang gửi mã...
+                    </>
+                  ) : (
+                    <>
+                      <FiLock className="text-lg" />
+                      Đổi mật khẩu
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nhập mã OTP đã gửi qua email:
+                  </label>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Mã gồm 4 số"
+                    maxLength={4}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleVerifyOtp}
+                    disabled={loading}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Đang xác minh...
+                      </>
+                    ) : (
+                      <>
+                        <FiCheckCircle className="text-lg" />
+                        Xác minh OTP
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStep(1);
+                      setOtp("");
+                      setMessage("");
+                    }}
+                    className="px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mật khẩu mới:
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Nhập mật khẩu mới"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Xác nhận mật khẩu mới:
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Xác nhận mật khẩu mới"
+                  />
+                </div>
+                <button
+                  onClick={handleChangePassword}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Đang đổi...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheckCircle className="text-lg" />
+                      Xác nhận đổi mật khẩu
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* 📨 Thông báo */}
+            {message && (
+              <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${
+                message.includes("✅") || message.includes("thành công")
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : message.includes("⚠️") 
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}>
+                {message}
+              </div>
+            )}
+          </div>
+
+          {/* Nút điều hướng */}
+          <div className="border-t border-gray-200 pt-6 space-y-3">
             <button
-              onClick={handleChangePassword}
-              disabled={loading}
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition"
+              onClick={() => navigate("/")}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-gray-600 to-slate-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
             >
-              {loading ? "Đang đổi..." : "Xác nhận đổi mật khẩu"}
+              <FiArrowLeft className="text-lg" />
+              Quay về Trang chủ
+            </button>
+
+            <button
+              onClick={() => {
+                logout();
+                navigate("/login");
+              }}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+            >
+              <FiLogOut className="text-lg" />
+              Đăng xuất
             </button>
           </div>
-        )}
-
-        {/* 📨 Thông báo */}
-        {message && (
-          <p className="mt-4 text-center text-sm text-gray-700 bg-white/40 p-2 rounded-md">
-            {message}
-          </p>
-        )}
-
-        <hr className="my-5 border-gray-300" />
-
-        {/* Nút điều hướng */}
-        <button
-          onClick={() => navigate("/")}
-          className="w-full py-3 mb-3 bg-indigo-500 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-600 hover:scale-[1.03] transition-transform"
-        >
-          Quay về Trang chủ
-        </button>
-
-        <button
-          onClick={() => {
-            logout();
-            navigate("/login");
-          }}
-          className="w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-lg hover:bg-red-600 hover:scale-[1.03] transition-transform"
-        >
-          Đăng xuất
-        </button>
+        </div>
       </div>
     </div>
   );

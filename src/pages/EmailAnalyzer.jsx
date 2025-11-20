@@ -5,6 +5,7 @@ import {
   getGmailConnectUrl,
 } from "../services/gmailService";
 import EmailResult from "../components/EmailAnalyzer";
+import { FiMail, FiShield, FiCheck, FiAlertTriangle, FiLink, FiUser } from "react-icons/fi";
 
 export default function EmailAnalyzer() {
   const [input, setInput] = useState("");
@@ -122,14 +123,30 @@ export default function EmailAnalyzer() {
   const riskColor = (level) => {
     switch (level) {
       case "CRITICAL":
+        return "bg-gradient-to-br from-red-50 to-orange-50 border-red-200 text-red-800";
       case "HIGH":
-        return "border-red-500 bg-red-50";
+        return "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-800";
       case "MEDIUM":
-        return "border-yellow-400 bg-yellow-50";
+        return "bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200 text-yellow-800";
       case "LOW":
-        return "border-green-500 bg-green-50";
+        return "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 text-green-800";
       default:
-        return "border-gray-300 bg-gray-50";
+        return "bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200 text-gray-800";
+    }
+  };
+
+  const riskBadgeColor = (level) => {
+    switch (level) {
+      case "CRITICAL":
+        return "bg-gradient-to-r from-red-500 to-red-600";
+      case "HIGH":
+        return "bg-gradient-to-r from-orange-500 to-orange-600";
+      case "MEDIUM":
+        return "bg-gradient-to-r from-yellow-500 to-yellow-600";
+      case "LOW":
+        return "bg-gradient-to-r from-green-500 to-green-600";
+      default:
+        return "bg-gradient-to-r from-gray-500 to-gray-600";
     }
   };
 
@@ -177,102 +194,207 @@ export default function EmailAnalyzer() {
   };
 
   return (
-    <section className="max-w-5xl mx-auto mt-12 p-6 bg-white rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold text-indigo-700 mb-6 text-center">
-        ✉️ Trình Phân Tích Email Lừa Đảo
-      </h2>
+    <section className="max-w-6xl mx-auto mt-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+            <FiShield className="text-white text-xl" />
+          </div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-purple-600 bg-clip-text text-transparent">
+            Phân Tích Email Lừa Đảo
+          </h2>
+        </div>
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Sử dụng AI để phát hiện và cảnh báo các email đáng ngờ. Bảo vệ bạn khỏi các cuộc tấn công mạng tinh vi.
+        </p>
+      </div>
 
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Nhập nội dung email đáng ngờ..."
-        className="w-full h-40 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-400"
-      />
+      {/* Manual Input Section */}
+      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 mb-8">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <FiMail className="text-blue-500" />
+          Phân tích email thủ công
+        </h3>
+        
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Nhập nội dung email đáng ngờ để phân tích..."
+          className="w-full h-40 border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none"
+        />
 
-      <button
-        onClick={handleAnalyzeManual}
-        disabled={loading}
-        className="mt-3 px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-      >
-        {loading ? "🔍 Đang phân tích..." : "Phân Tích Email Nhập Tay"}
-      </button>
+        <button
+          onClick={handleAnalyzeManual}
+          disabled={loading}
+          className="mt-4 w-full bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          {loading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Đang phân tích...
+            </>
+          ) : (
+            <>
+              <FiShield className="text-lg" />
+              Phân Tích Email
+            </>
+          )}
+        </button>
 
-      {result && <EmailResult result={result} />}
+        {result && <EmailResult result={result} />}
+      </div>
 
       {/* ========================== */}
       {/* DANH SÁCH EMAIL GMAIL */}
       {/* ========================== */}
-      <div className="mt-10">
+      <div className="mt-8">
         {emails.length === 0 ? (
-          <div className="text-center">
+          <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-slate-100 rounded-2xl border border-gray-200">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FiMail className="text-green-500 text-2xl" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Chưa kết nối Gmail</h3>
+            <p className="text-gray-600 mb-6">Kết nối với Gmail để phân tích email tự động</p>
             <button
               onClick={() => (window.location.href = getGmailConnectUrl())}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 mx-auto"
             >
-              📩 Kết Nối Gmail
+              <FiMail className="text-lg" />
+              Kết Nối Gmail
             </button>
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-semibold">📥 Email gần đây</h3>
-              <button
-                onClick={toggleSelectAll}
-                className="px-3 py-1 bg-indigo-100 rounded-md hover:bg-indigo-200"
-              >
-                {selected.length === emails.length ? "Bỏ chọn" : "Chọn tất cả"}
-              </button>
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <FiMail className="text-purple-500" />
+                  Email gần đây
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Đã tải {emails.length} email • {selected.length} được chọn
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={toggleSelectAll}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium shadow-sm"
+                >
+                  {selected.length === emails.length ? (
+                    <>
+                      <FiCheck className="text-lg" />
+                      Bỏ chọn tất cả
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck className="text-lg" />
+                      Chọn tất cả
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={analyzeSelected}
+                  disabled={loading || selected.length === 0}
+                  className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FiShield className="text-lg" />
+                  Quét Email Đã Chọn ({selected.length})
+                </button>
+              </div>
             </div>
 
-            <ul className="divide-y divide-gray-200">
+            <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white shadow-sm">
               {emails.map((email) => (
-                <li key={email.id} className="py-3">
-                  <label className="flex space-x-3 cursor-pointer">
+                <div key={email.id} className="p-4 hover:bg-gray-50 transition-colors duration-150">
+                  <div className="flex items-start gap-4">
                     <input
                       type="checkbox"
                       checked={selected.includes(email.id)}
                       onChange={() => toggleSelect(email.id)}
+                      className="mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                     />
-                    <div className="flex-1">
-                      <p className="font-semibold text-indigo-700">{email.subject}</p>
-                      <p className="text-sm text-gray-600">
-                        {email.from} — <span>{email.date}</span>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900 text-lg">{email.subject}</h4>
+                        {resultsMap[email.id] && (
+                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${riskBadgeColor(resultsMap[email.id].risk_level)} text-white`}>
+                            {resultsMap[email.id].risk_level}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 mb-1">
+                        <FiUser className="inline w-4 h-4 mr-1" />
+                        {email.from}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">{email.snippet}</p>
+                      <p className="text-xs text-gray-500 mb-2">
+                        {new Date(email.date).toLocaleString('vi-VN')}
+                      </p>
+                      <p className="text-sm text-gray-700 line-clamp-2">{email.snippet}</p>
                     </div>
-                  </label>
+                  </div>
 
                   {resultsMap[email.id] && (
-                    <div
-                      className={`mt-3 border rounded-lg p-3 ${riskColor(
-                        resultsMap[email.id].risk_level
-                      )}`}
-                    >
-                      <p className="font-semibold">
-                        📊 Rủi ro: {resultsMap[email.id].risk_level} (
-                        {resultsMap[email.id].threat_score}%)
-                      </p>
-                      <p>👤 {resultsMap[email.id].sender_analysis}</p>
-                      <p>🧾 {resultsMap[email.id].content_analysis}</p>
-                      <p>🔗 {resultsMap[email.id].link_analysis}</p>
+                    <div className={`mt-4 p-4 rounded-xl border-2 ${riskColor(resultsMap[email.id].risk_level)}`}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${riskBadgeColor(resultsMap[email.id].risk_level)}`}>
+                          <FiAlertTriangle className="text-white text-lg" />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-lg">
+                            Rủi ro: {resultsMap[email.id].risk_level}
+                          </h5>
+                          <p className="text-sm text-gray-600">
+                            Điểm đe dọa: {resultsMap[email.id].threat_score}%
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-3 gap-4 text-sm">
+                        <div className="flex items-start gap-2">
+                          <FiUser className="text-blue-500 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="font-medium">Người gửi:</span>
+                            <p className="text-gray-700">{resultsMap[email.id].sender_analysis}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2">
+                          <FiMail className="text-purple-500 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="font-medium">Nội dung:</span>
+                            <p className="text-gray-700">{resultsMap[email.id].content_analysis}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2">
+                          <FiLink className="text-orange-500 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="font-medium">Liên kết:</span>
+                            <p className="text-gray-700">{resultsMap[email.id].link_analysis}</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                </li>
+                </div>
               ))}
-            </ul>
-
-            <div className="mt-8 text-center">
-              <button
-                onClick={analyzeSelected}
-                disabled={loading}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg"
-              >
-                {loading ? "🔍 Đang quét..." : "🤖 Quét Email Đã Chọn"}
-              </button>
             </div>
           </>
         )}
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3">
+          <FiAlertTriangle className="text-red-500 text-xl flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
     </section>
   );
 }
