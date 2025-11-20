@@ -21,6 +21,11 @@ export default function App() {
         <div className="pt-16">
           <AnimatedRoutes />
         </div>
+
+        {/* THÊM CÁC WIDGET Ở ĐÂY - sẽ hiển thị trên tất cả các trang */}
+        <ChatBox />
+        <ZaloWidget />
+        <MessengerWidget /> {/* THÊM DÒNG NÀY */}
       </Router>
     </AuthProvider>
   );
