@@ -1,7 +1,7 @@
 // components/ChatBox.jsx
 import React, { useState, useRef, useEffect } from "react";
 
-export default function PhishingAIChatbot() {
+export default function ChatBox() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");

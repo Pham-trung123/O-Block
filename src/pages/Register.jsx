@@ -210,18 +210,42 @@ export default function Register({ isPopup = false }) {
         or register with social platforms
       </p>
 
-      {/* SOCIAL ICONS */}
-      <div className="flex justify-center space-x-4 mt-3">
-        <button className="p-3 border rounded-lg hover:bg-gray-100">
+      {/* SOCIAL LOGIN */}
+      <p className="text-center text-gray-600 text-sm mt-4">
+        or login with social platforms
+      </p>
+
+      <div className="flex justify-center items-center space-x-4 mt-2">
+        <button
+          onClick={() =>
+            (window.location.href = "http://localhost:3000/auth/google/login")
+          }
+          className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
+        >
           <i className="fa-brands fa-google text-xl"></i>
         </button>
-        <button className="p-3 border rounded-lg hover:bg-gray-100">
+
+        <button
+          onClick={() =>
+            (window.location.href =
+              "http://localhost:3000/auth/facebook/login")
+          }
+          className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
+        >
           <i className="fa-brands fa-facebook text-xl"></i>
         </button>
-        <button className="p-3 border rounded-lg hover:bg-gray-100">
+
+        <button
+          onClick={() =>
+            (window.location.href =
+              "http://localhost:3000/auth/github/login")
+          }
+          className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100"
+        >
           <i className="fa-brands fa-github text-xl"></i>
         </button>
-        <button className="p-3 border rounded-lg hover:bg-gray-100">
+
+        <button className="w-12 h-12 border rounded-xl flex items-center justify-center hover:bg-gray-100">
           <i className="fa-brands fa-linkedin text-xl"></i>
         </button>
       </div>

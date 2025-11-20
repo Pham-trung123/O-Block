@@ -11,6 +11,9 @@ import Profile from "./pages/Profile";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./context/AuthContext";
 import AuthPage from "./pages/AuthPage";
+import ChatBox from "./components/ChatBox";
+import ZaloWidget from "./components/ZaloWidget";
+import MessengerWidget from "./components/MessengerWidget";
 
 
 export default function App() {
