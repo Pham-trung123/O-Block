@@ -64,6 +64,10 @@ export default function Login({ isPopup }) {
         login(data.user);
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("isLoggedIn", "true");
+        // 👉 THÊM code phân quyền
+        if (data.user.role === "admin") {
+        return navigate("/admin");
+        }
         navigate("/");
       } else {
         setErrors({ general: data.message });
