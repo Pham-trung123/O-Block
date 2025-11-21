@@ -14,6 +14,9 @@ import AuthPage from "./pages/AuthPage";
 import ChatBox from "./components/ChatBox";
 import ZaloWidget from "./components/ZaloWidget";
 import MessengerWidget from "./components/MessengerWidget";
+import Dashboard from "./pages/Dashboard";
+
+
 
 
 export default function App() {
@@ -56,6 +59,7 @@ function AnimatedRoutes() {
           <Route path="/analyze" element={<EmailAnalyzer />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<AuthPage />} />  
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </motion.div>
     </AnimatePresence>

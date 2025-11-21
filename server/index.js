@@ -102,6 +102,48 @@ async function sendMail(to, subject, html) {
     console.error("❌ Lỗi sendMail():", err);
   }
 }
+// =========================
+// 📊 API DASHBOARD
+// =========================
+app.get("/api/dashboard/stats", async (req, res) => {
+  try {
+    const pool = await getPool();
+
+    // 1. Tổng số email đã phân tích
+    const totalResult = await pool.request().query(`
+      SELECT COUNT(*) AS total FROM email_analysis
+    `);
+
+    // 2. Phân bố risk_level
+    const riskResult = await pool.request().query(`
+      SELECT risk_level, COUNT(*) AS total
+      FROM email_analysis
+      GROUP BY risk_level
+    `);
+
+    // 3. Xu hướng theo ngày
+    const trendResult = await pool.request().query(`
+      SELECT 
+        CONVERT(date, analysis_date) AS [date],
+        COUNT(*) AS total
+      FROM email_analysis
+      GROUP BY CONVERT(date, analysis_date)
+      ORDER BY [date] ASC
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        total: totalResult.recordset[0]?.total || 0,
+        risk: riskResult.recordset,
+        trend: trendResult.recordset,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Lỗi /api/dashboard/stats:", err);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+});
 
 // ========================
 // REGISTER

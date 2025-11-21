@@ -153,6 +153,7 @@ export default function EmailAnalyzer() {
           ...prev,
           [id]: data.result,
         }));
+        await saveAnalysis(id, content, data.result);
 
         // mở UI sau khi phân tích
         setIsOpen((prev) => ({ ...prev, [id]: true }));
@@ -169,6 +170,23 @@ export default function EmailAnalyzer() {
       setLoading(false);
     }
   };
+const saveAnalysis = async (id, content, raw_result) => {
+  try {
+    await fetch("http://localhost:3000/api/save-analysis", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        email_content: content,
+        raw_result: raw_result
+      }),
+    });
+
+    console.log("💾 Đã lưu kết quả AI vào DB!");
+  } catch (err) {
+    console.error("❌ Lỗi save-analysis:", err);
+  }
+};
 
   // =============================
   // Quét nhiều email
