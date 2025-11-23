@@ -14,10 +14,13 @@ import AuthPage from "./pages/AuthPage";
 import ChatBox from "./components/ChatBox";
 import ZaloWidget from "./components/ZaloWidget";
 import MessengerWidget from "./components/MessengerWidget";
+import AdminDashboard from "./pages/AdminDashboard";
 import Dashboard from "./pages/Dashboard";
 
 
 
+// ⭐ import AdminRoute
+import AdminRoute from "./routes/AdminRoute";
 
 export default function App() {
   return (
@@ -28,10 +31,10 @@ export default function App() {
           <AnimatedRoutes />
         </div>
 
-        {/* THÊM CÁC WIDGET Ở ĐÂY - sẽ hiển thị trên tất cả các trang */}
+        {/* widget global */}
         <ChatBox />
         <ZaloWidget />
-        <MessengerWidget /> {/* THÊM DÒNG NÀY */}
+        <MessengerWidget />
       </Router>
     </AuthProvider>
   );
@@ -58,6 +61,17 @@ function AnimatedRoutes() {
           <Route path="/register" element={<Register />} />
           <Route path="/analyze" element={<EmailAnalyzer />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/auth" element={<AuthPage />} />
+
+          {/* ⭐ ADMIN ĐÃ BẢO VỆ ROLE ⭐ */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
           <Route path="/auth" element={<AuthPage />} />  
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>

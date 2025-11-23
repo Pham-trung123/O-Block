@@ -106,6 +106,15 @@ export default function Navbar() {
                     <span>Cài đặt</span>
                   </button>
                 </div>
+                {user?.role === "admin" && (
+                  <button
+                   onClick={() => navigate("/admin")}
+                  className="mx-2 mb-2 flex items-center space-x-3 w-[calc(100%-1rem)] px-3 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition-all duration-150"
+                  >
+                    <FaShieldAlt className="text-purple-600" />
+                    <span>Quản lý hệ thống</span>
+                  </button>
+                )}
 
                 {/* Logout Button */}
                 <div className="p-2 border-t border-gray-200/60">
