@@ -1,7 +1,8 @@
 import express from "express";
 import sql from "mssql/msnodesqlv8.js";
 import { requireAdmin } from "../middleware/auth.js";
-import { getPool } from "../test-db.js";
+import { getPool } from "../index.js";
+
 
 
 const router = express.Router();
