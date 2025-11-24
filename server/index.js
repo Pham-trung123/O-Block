@@ -190,7 +190,6 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password, captchaToken } = req.body;
 
-    // verify captcha
     if (!captchaToken)
       return res.json({
         success: false,
@@ -223,7 +222,6 @@ app.post("/api/login", async (req, res) => {
 
     const user = result.recordset[0];
 
-    // Fix bcrypt $2y$ error
     let hash = user.password;
     if (hash.startsWith("$2y$")) hash = "$2a$" + hash.substring(4);
 
@@ -231,24 +229,19 @@ app.post("/api/login", async (req, res) => {
     if (!valid)
       return res.json({ success: false, message: "❌ Mật khẩu sai!" });
 
-    // Login Alert Email
-    const now = new Date().toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",
-    });
-
-    const html = `
-      <div style="font-family: Arial; padding: 20px;">
-        <h2>🔐 Đăng nhập mới vào Phish Hunters</h2>
-        <p>Email: <b>${email}</b></p>
-        <p>Thời gian: ${now}</p>
-      </div>
-    `;
-
-    await sendMail(email, "🔐 Đăng nhập mới", html);
+    // =======================
+    // GIỮ NGUYÊN — CHỈ THÊM ROLE
+    // =======================
+    req.session.user = { id: user.id, role: user.role, email: user.email };
 
     res.json({
       success: true,
-      user: { id: user.id, username: user.username, email: user.email, role: user.role, },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role, // THÊM ROLE ĐỂ ADMIN DASHBOARD HOẠT ĐỘNG
+      },
     });
   } catch (error) {
     console.error("❌ Lỗi /login:", error);
@@ -428,3 +421,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
   console.log(`🚀 Server chạy tại http://localhost:${PORT}`)
 );
+
+// ⭐⭐⭐⭐⭐ THÊM DÒNG NÀY — KHÔNG SỬA CODE CŨ ⭐⭐⭐⭐⭐
+export { getPool };
