@@ -1,0 +1,16 @@
+{
+  "navbar": {
+    "dashboard": "仪表板",
+    "analyze": "分析",
+    "history": "历史记录",
+    "profile": "个人资料",
+    "settings": "设置",
+    "logout": "退出登录",
+    "login": "登录",
+    "register": "注册"
+  },
+  "settings": {
+    "language": "语言",
+    "choose_language": "选择您想使用的语言"
+  }
+}

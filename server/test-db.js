@@ -3,7 +3,7 @@ import sql from "mssql/msnodesqlv8.js";
 
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=CUONG\\CUONGDUA;Database=phisingemail;Trusted_Connection=Yes;",
+    "Driver={ODBC Driver 17 for SQL Server};Server=THANHPT09\\SQLEXPRESS03;Database=phisingemail;Trusted_Connection=Yes;",
   options: {
     connectionTimeout: 5000, // Giúp tránh treo
   },

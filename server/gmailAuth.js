@@ -58,6 +58,39 @@ router.get("/callback", async (req, res) => {
 });
 
 // =============================
+// 🔥 API: Kiểm tra trạng thái Gmail
+// 👉 Thêm API này để React biết user đã kết nối hay chưa
+// =============================
+router.get("/status", async (req, res) => {
+  try {
+    if (!req.session.googleTokens) {
+      return res.json({
+        success: true,
+        connected: false,
+      });
+    }
+
+    // Kiểm tra token còn hợp lệ hay không
+    oAuth2Client.setCredentials(req.session.googleTokens);
+
+    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+    const profile = await gmail.users.getProfile({ userId: "me" });
+
+    return res.json({
+      success: true,
+      connected: true,
+      email: profile.data.emailAddress,
+    });
+  } catch (err) {
+    console.error("❌ Status check error:", err);
+    res.json({
+      success: false,
+      connected: false,
+    });
+  }
+});
+
+// =============================
 // 🔧 Decode Base64URL
 // =============================
 function decodeBase64Url(str) {
@@ -73,28 +106,23 @@ function decodeBase64Url(str) {
 }
 
 // =============================
-// 📌 🔥 LẤY NỘI DUNG EMAIL ĐẦY ĐỦ
+// 📌 🔥 LẤY NỘI DUNG EMAIL ĐẦY ĐỦ (Multipart support)
 // =============================
 function extractFullBody(payload) {
   if (!payload) return "";
 
-  // 1️⃣ Nếu có body ngay trong payload
   if (payload.body?.data) {
     return decodeBase64Url(payload.body.data);
   }
 
-  // 2️⃣ Multipart – duyệt tất cả parts
   if (payload.parts?.length) {
     for (const part of payload.parts) {
-      // ưu tiên text/plain
       if (part.mimeType === "text/plain" && part.body?.data) {
         return decodeBase64Url(part.body.data);
       }
-      // fallback: text/html
       if (part.mimeType === "text/html" && part.body?.data) {
         return decodeBase64Url(part.body.data);
       }
-      // recursive parts
       const deep = extractFullBody(part);
       if (deep) return deep;
     }
@@ -145,7 +173,6 @@ router.get("/messages", async (req, res) => {
           headers.find((h) => h.name === "From")?.value || "(Unknown)";
         const date = headers.find((h) => h.name === "Date")?.value || "";
 
-        // 🔥 FULL BODY — multipart, HTML, plain text
         const fullBody = extractFullBody(msg.data.payload);
 
         return {
@@ -166,7 +193,9 @@ router.get("/messages", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Gmail fetch error:", err);
-    res.status(500).json({ success: false, message: "Lỗi không thể lấy email" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi không thể lấy email" });
   }
 });
 
