@@ -25,7 +25,7 @@ export default function Home() {
     duration: 0.4
   };
 
-  // Render các view khác nhau
+  // Render các view khác nhau (KHÔNG XOÁ LOGIC)
   const renderCurrentView = (view) => {
     switch(view) {
       case 'home':
@@ -41,18 +41,21 @@ export default function Home() {
             <Stats />
           </div>
         );
+
       case 'analyzer':
         return (
           <div className="mt-8">
             <EmailAnalyzer />
           </div>
         );
+
       case 'dashboard':
         return (
           <div className="mt-8">
             <Dashboard />
           </div>
         );
+
       case 'profile':
         return (
           <div className="max-w-4xl mx-auto mt-8">
@@ -91,6 +94,7 @@ export default function Home() {
             </div>
           </div>
         );
+
       default:
         return (
           <div className="space-y-20 mt-8">
@@ -111,15 +115,10 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20">
       <Navbar onViewChange={setCurrentView} currentView={currentView} />
       <Hero />
-      
-      {/* Navigation Tabs */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/60 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4">
-          <Navigation onViewChange={setCurrentView} currentView={currentView} />
-        </div>
-      </div>
 
-      {/* Main Content với chuyển cảnh */}
+      {/* ❌ XOÁ HOÀN TOÀN Navigation Tabs  */}
+
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
           <motion.div
@@ -134,52 +133,8 @@ export default function Home() {
           </motion.div>
         </AnimatePresence>
       </main>
-      
+
       <Footer />
     </div>
   );
 }
-
-// Component Navigation mới cho Navbar
-export const Navigation = ({ onViewChange, currentView }) => {
-  const navItems = [
-    { key: 'home', label: 'Trang chủ', icon: '🏠' },
-    { key: 'analyzer', label: 'Phân tích Email', icon: '📧' },
-    { key: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { key: 'profile', label: 'Hồ sơ', icon: '👤' },
-  ];
-
-  return (
-    <nav className="flex space-x-1 py-4">
-      {navItems.map((item) => (
-        <button
-          key={item.key}
-          onClick={() => onViewChange(item.key)}
-          className={`relative flex items-center space-x-3 px-6 py-3 rounded-xl transition-all duration-300 font-medium group ${
-            currentView === item.key 
-              ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg shadow-purple-500/25' 
-              : 'text-gray-600 hover:text-purple-600 hover:bg-white hover:shadow-md border border-transparent hover:border-purple-200'
-          }`}
-        >
-          <span className="text-lg">{item.icon}</span>
-          <span>{item.label}</span>
-          
-          {/* Active indicator */}
-          {currentView === item.key && (
-            <motion.div 
-              className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-white rounded-full"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            />
-          )}
-          
-          {/* Hover effect */}
-          <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300 ${
-            currentView === item.key ? 'group-hover:opacity-10' : ''
-          }`} />
-        </button>
-      ))}
-    </nav>
-  );
-};

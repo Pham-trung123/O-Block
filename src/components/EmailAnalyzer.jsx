@@ -83,8 +83,12 @@ export default function EmailAnalyzer() {
   // =============================
   useEffect(() => {
     if (!user) return;
+    if (localStorage.getItem("gmail_connected") === "1") {
+    fetchEmails();}
     const params = new URLSearchParams(window.location.search);
-    if (params.get("gmail_connected")) fetchEmails();
+    if (params.get("gmail_connected")) {
+    localStorage.setItem("gmail_connected", "1");   // ⭐ thêm dòng này
+    fetchEmails();}
   }, [user]);
 
   const fetchEmails = async (pageToken = null) => {

@@ -1,0 +1,17 @@
+{
+  "navbar": {
+    "dashboard": "Bảng điều khiển",
+    "analyze": "Phân tích",
+    "history": "Lịch sử",
+    "profile": "Hồ sơ cá nhân",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất",
+    "login": "Đăng nhập",
+    "register": "Đăng ký"
+  },
+  "settings": {
+    "language": "Ngôn ngữ",
+    "choose_language": "Chọn ngôn ngữ bạn muốn sử dụng"
+  }
+}
+

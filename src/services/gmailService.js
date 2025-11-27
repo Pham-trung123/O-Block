@@ -1,18 +1,22 @@
 const BASE_URL = "http://localhost:3000";
 
-// ✅ Hàm tạo đường dẫn đăng nhập Gmail OAuth2
+// ======================================================
+// ✅ HÀM LẤY URL ĐĂNG NHẬP GMAIL OAUTH2
+// ======================================================
 export function getGmailConnectUrl() {
   return `${BASE_URL}/api/gmail/login`;
 }
 
-// ✅ Lấy danh sách email từ backend (hỗ trợ phân trang & xử lý lỗi)
+// ======================================================
+// ✅ LẤY DANH SÁCH EMAIL (PHÂN TRANG + KIỂM TRA LỖI)
+// ======================================================
 export async function fetchEmails(pageToken = null) {
   try {
     const url = new URL(`${BASE_URL}/api/gmail/messages`);
     if (pageToken) url.searchParams.set("pageToken", pageToken);
 
     const response = await fetch(url.toString(), {
-      credentials: "include",
+      credentials: "include",       // ⭐ QUAN TRỌNG: giữ session Gmail
     });
 
     if (!response.ok)
@@ -30,12 +34,15 @@ export async function fetchEmails(pageToken = null) {
   }
 }
 
-// ✅ Gửi nội dung email để AI Gemini phân tích
+// ======================================================
+// ✅ GỬI NỘI DUNG EMAIL CHO AI PHÂN TÍCH
+// ======================================================
 export async function analyzeEmail(emailContent) {
   try {
     const response = await fetch(`${BASE_URL}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include", // ⭐ Nên thêm để đồng bộ cookie phiên
       body: JSON.stringify({ emailContent }),
     });
 
@@ -51,5 +58,28 @@ export async function analyzeEmail(emailContent) {
   } catch (err) {
     console.error("❌ analyzeEmail error:", err);
     return { success: false, message: err.message };
+  }
+}
+
+// ======================================================
+// ⭐⭐  NEW: KIỂM TRA TRẠNG THÁI KẾT NỐI GMAIL
+// ======================================================
+export async function checkGmailStatus() {
+  try {
+    const response = await fetch(`${BASE_URL}/api/gmail/status`, {
+      credentials: "include",   // ⭐ BẮT BUỘC để đọc session user
+    });
+
+    if (!response.ok) {
+      return { success: false, connected: false };
+    }
+
+    const data = await response.json();
+
+    // Dữ liệu hợp lệ từ server: { success, connected, email }
+    return data;
+  } catch (err) {
+    console.error("❌ checkGmailStatus error:", err);
+    return { success: false, connected: false };
   }
 }

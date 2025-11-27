@@ -1,0 +1,16 @@
+{
+  "navbar": {
+    "dashboard": "Dashboard",
+    "analyze": "Analyze",
+    "history": "History",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  },
+  "settings": {
+    "language": "Language",
+    "choose_language": "Choose your preferred language"
+  }
+}
