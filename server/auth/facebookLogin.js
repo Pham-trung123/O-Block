@@ -11,7 +11,7 @@ const router = express.Router();
 // SQL Pool
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=E44T742\\SQLEXPRESS05;Database=phisingemail;Trusted_Connection=Yes;",
+    "Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=phisingemail;Trusted_Connection=Yes;",
 };
 let pool;
 async function getPool() {
