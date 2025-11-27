@@ -18,7 +18,7 @@ const oAuth2Client = new google.auth.OAuth2(
 
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
 
-// Alias: /auth → /login
+// Alias /auth → /login
 router.get("/auth", (req, res) => {
   res.redirect("/api/gmail/login");
 });
@@ -32,12 +32,13 @@ router.get("/login", (req, res) => {
     prompt: "consent",
     scope: SCOPES,
   });
+
   console.log("🌐 Redirecting to Google OAuth:", url);
   res.redirect(url);
 });
 
 // =============================
-// 🔁 Bước 2: Callback OAuth
+// 🔁 Bước 2: OAuth Callback
 // =============================
 router.get("/callback", async (req, res) => {
   const code = req.query.code;
@@ -47,8 +48,34 @@ router.get("/callback", async (req, res) => {
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
+    // LƯU TOKEN VÀO SESSION (logic cũ giữ nguyên)
     req.session.googleTokens = tokens;
     console.log("✅ Gmail tokens stored");
+
+    // ⭐⭐⭐ GIỮ TRẠNG THÁI GMAIL BẰNG COOKIE ⭐⭐⭐
+    res.cookie("gmail_connected", "1", {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
+    });
+
+    // Lấy email user từ JWT Google nếu có
+    const email =
+      tokens.id_token
+        ? JSON.parse(
+            Buffer.from(tokens.id_token.split(".")[1], "base64").toString()
+          ).email
+        : null;
+
+    if (email) {
+      res.cookie("gmail_email", email, {
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: false,
+        secure: false,
+        sameSite: "lax",
+      });
+    }
 
     res.redirect("http://localhost:5173/?gmail_connected=1");
   } catch (err) {
@@ -58,22 +85,27 @@ router.get("/callback", async (req, res) => {
 });
 
 // =============================
-// 🔥 API: Kiểm tra trạng thái Gmail
-// 👉 Thêm API này để React biết user đã kết nối hay chưa
+// 🔥 API kiểm tra trạng thái Gmail
 // =============================
 router.get("/status", async (req, res) => {
   try {
-    if (!req.session.googleTokens) {
+    // ⭐ ƯU TIÊN LẤY COOKIE NẾU SESSION MẤT
+    if (req.cookies.gmail_connected === "1") {
       return res.json({
         success: true,
-        connected: false,
+        connected: true,
+        email: req.cookies.gmail_email || null,
       });
     }
 
-    // Kiểm tra token còn hợp lệ hay không
-    oAuth2Client.setCredentials(req.session.googleTokens);
+    // Logic cũ nếu session còn
+    if (!req.session.googleTokens) {
+      return res.json({ success: true, connected: false });
+    }
 
+    oAuth2Client.setCredentials(req.session.googleTokens);
     const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+
     const profile = await gmail.users.getProfile({ userId: "me" });
 
     return res.json({
@@ -83,10 +115,7 @@ router.get("/status", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Status check error:", err);
-    res.json({
-      success: false,
-      connected: false,
-    });
+    res.json({ success: false, connected: false });
   }
 });
 
@@ -106,7 +135,7 @@ function decodeBase64Url(str) {
 }
 
 // =============================
-// 📌 🔥 LẤY NỘI DUNG EMAIL ĐẦY ĐỦ (Multipart support)
+// 📌 LẤY NỘI DUNG EMAIL (Multipart)
 // =============================
 function extractFullBody(payload) {
   if (!payload) return "";
@@ -251,7 +280,7 @@ router.get("/latest", async (req, res) => {
 });
 
 // =============================
-// 📄 API: Lấy chi tiết email
+// 📄 API lấy chi tiết email
 // =============================
 router.get("/message/:id", async (req, res) => {
   try {
@@ -296,15 +325,20 @@ router.get("/message/:id", async (req, res) => {
 });
 
 // =============================
-// 🧹 API: Logout Gmail
+// 🧹 API Logout Gmail
 // =============================
 router.get("/logout", (req, res) => {
   req.session.googleTokens = null;
+
+  // ⭐ XÓA COOKIE TRẠNG THÁI GMAIL
+  res.clearCookie("gmail_connected");
+  res.clearCookie("gmail_email");
+
   res.json({ success: true, message: "Đã logout Gmail" });
 });
 
 // =============================
-// 🔎 Health Check
+// 🔎 Health check
 // =============================
 router.get("/", (req, res) => {
   res.json({

@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import EmailAnalyzer from "./pages/EmailAnalyzer";
+import EmailAnalyzer from "./components/EmailAnalyzer";
 import Profile from "./pages/Profile";
 
 import Navbar from "./components/Navbar";
