@@ -29,13 +29,14 @@ router.get("/auth", (req, res) => {
 router.get("/login", (req, res) => {
   const url = oAuth2Client.generateAuthUrl({
     access_type: "offline",
-    prompt: "consent",
+    prompt: "select_account",   // 👈 CHỈ THAY DÒNG NÀY
     scope: SCOPES,
   });
 
   console.log("🌐 Redirecting to Google OAuth:", url);
   res.redirect(url);
 });
+
 
 // =============================
 // 🔁 Bước 2: OAuth Callback

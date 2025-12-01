@@ -1,35 +1,33 @@
 // server/services/testGemini.js
-import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// ✅ Load đúng file .env (từ thư mục cha)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, "../.env") });
+
+// Load đúng file .env
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
+console.log("🔑 GEMINI KEY:", process.env.GEMINI_API_KEY ? "ĐÃ LOAD" : "KHÔNG LOAD");
 
 const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-  console.error("❌ GEMINI_API_KEY không tìm thấy trong .env!");
-  process.exit(1);
-}
+const genAI = new GoogleGenerativeAI(apiKey);
 
 async function run() {
   try {
-    const ai = new GoogleGenAI({ apiKey });
-    console.log("🚀 Gửi yêu cầu tới Gemini...");
+    console.log("🔍 Gửi yêu cầu đến Gemini 2.0 Flash…");
 
-    const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: "Hello from Phish Hunters!",
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash"
     });
 
-    console.log("✅ Kết quả Gemini:");
-    console.log(result.text);
+    const result = await model.generateContent("Hello từ test!");
+    console.log("✅ Kết quả:", result.response.text());
+
   } catch (err) {
-    console.error("❌ Lỗi khi gọi Gemini:", err.message);
+    console.error("❌ Lỗi Gemini:", err);
   }
 }
 

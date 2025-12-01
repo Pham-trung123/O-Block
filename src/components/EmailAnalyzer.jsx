@@ -21,54 +21,28 @@ export default function EmailAnalyzer() {
   const [itemLoading, setItemLoading] = useState({});
   const [progress, setProgress] = useState({});
 
+    // ⭐ mapping key → tên hiển thị trong UI
+    const readableCriteria = {
+    sender: "Người gửi đáng ngờ",
+    subject: "Chủ đề bất thường",
+    urgent: "Nội dung khẩn cấp hoặc đe dọa",
+    sensitiveInfo: "Yêu cầu cung cấp thông tin nhạy cảm",
+    links: "Liên kết URL đáng ngờ",
+    attachments: "File đính kèm rủi ro",
+    grammar: "Sai chính tả hoặc ngữ pháp",
+    infoMismatch: "Mâu thuẫn thông tin trong email",
+    serverIP: "Máy chủ/IP gửi bất thường",
+    phishingPattern: "Dấu hiệu trùng mẫu email lừa đảo"
+  };
+
+
   // ⭐ mở/đóng UI phân tích
   const [isOpen, setIsOpen] = useState({});
   const [scanningProgress, setScanningProgress] = useState(0);
 
-  // ⭐ Danh sách 10 tiêu chí
-  const criteriaList = [
-    "Người gửi đáng ngờ",
-    "Chủ đề bất thường",
-    "Nội dung khẩn cấp hoặc đe dọa",
-    "Yêu cầu cung cấp thông tin nhạy cảm",
-    "Liên kết URL đáng ngờ",
-    "File đính kèm rủi ro",
-    "Sai chính tả hoặc ngữ pháp",
-    "Mâu thuẫn thông tin trong email",
-    "Máy chủ/IP gửi bất thường",
-    "Dấu hiệu trùng mẫu email lừa đảo",
-  ];
+  
 
-  // ⭐ mapping từ AI → ✔️ hoặc —
-  const mapCriteriaToSignals = (analysis, rulesMatched, behaviorFlags) => {
-    if (!analysis) return {};
-
-    return {
-      "Người gửi đáng ngờ": analysis.domainTrust !== "TRUSTED",
-      "Chủ đề bất thường": behaviorFlags?.includes("high_urgency"),
-      "Nội dung khẩn cấp hoặc đe dọa":
-        rulesMatched?.some((r) => r.includes("threat")) ||
-        behaviorFlags?.includes("high_urgency"),
-      "Yêu cầu cung cấp thông tin nhạy cảm":
-        rulesMatched?.includes("scam:sensitive_request"),
-      "Liên kết URL đáng ngờ":
-        rulesMatched?.some((r) => r.startsWith("technical:")),
-      "File đính kèm rủi ro":
-        analysis?.technicalIndicators?.toLowerCase()?.includes("file"),
-      "Sai chính tả hoặc ngữ pháp":
-        analysis?.scamAnalysis?.includes("chính tả") ||
-        analysis?.scamAnalysis?.includes("ngữ pháp"),
-      "Mâu thuẫn thông tin trong email":
-        analysis?.contextAnalysis?.includes("bất thường") ||
-        analysis?.contextAnalysis?.includes("không phù hợp"),
-      "Máy chủ/IP gửi bất thường":
-        analysis.domainTrust === "SUSPICIOUS" ||
-        analysis.domainTrust === "UNTRUSTED",
-      "Dấu hiệu trùng mẫu email lừa đảo":
-        rulesMatched?.some((r) => r.startsWith("scam:")) ||
-        rulesMatched?.some((r) => r.startsWith("psychological:")),
-    };
-  };
+ 
 
   // ⭐ tính mức rủi ro bằng tiêu chí
   const riskLevelFromCriteriaScore = (score) => {
@@ -145,25 +119,25 @@ export default function EmailAnalyzer() {
 
     try {
       const response = await fetch("http://localhost:3000/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailContent: content }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emailContent: content }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setResults((prev) => ({
-          ...prev,
-          [id]: data.result,
-        }));
-        await saveAnalysis(id, content, data.result);
+          setResults((prev) => ({
+              ...prev,
+              [id]: data.result,   // ✔ FIXED
+          }));
 
-        // mở UI sau khi phân tích
-        setIsOpen((prev) => ({ ...prev, [id]: true }));
+          await saveAnalysis(id, content, data.result); // đã đúng
+          setIsOpen((prev) => ({ ...prev, [id]: true }));
       } else {
-        setError("Phân tích thất bại.");
+          setError("Phân tích thất bại.");
       }
+
     } catch (err) {
       console.error(err);
       setError("Không thể kết nối AI.");
@@ -510,16 +484,10 @@ const saveAnalysis = async (id, content, raw_result) => {
             {displayEmails.map((email) => {
               const emailResult = results[email.id];
 
-              const criteriaStates = emailResult
-                ? mapCriteriaToSignals(
-                    emailResult.analysis,
-                    emailResult.rulesMatched,
-                    emailResult.behaviorFlags
-                  )
-                : {};
+              const criteriaStates = emailResult?.criteria || {};
 
-              const criteriaScore =
-                Object.values(criteriaStates).filter(Boolean).length * 10;
+              const criteriaScore = Object.values(criteriaStates)
+              .filter((x) => x.status === "warning").length * 10;
 
               const finalRisk = riskLevelFromCriteriaScore(criteriaScore);
 
@@ -708,37 +676,52 @@ const saveAnalysis = async (id, content, raw_result) => {
                           </h4>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {criteriaList.map((item, idx) => (
-                              <motion.div
-                                key={idx}
-                                className={`flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
-                                  criteriaStates[item] 
-                                    ? 'bg-red-50 border border-red-200' 
-                                    : 'bg-green-50 border border-green-200'
-                                }`}
-                                whileHover={{ scale: 1.02, x: 5 }}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.4 + idx * 0.1 }}
-                              >
-                                <span className={`text-sm font-medium ${
-                                  criteriaStates[item] ? 'text-red-700' : 'text-green-700'
-                                }`}>
-                                  {item}
-                                </span>
-                                <motion.div
-                                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
-                                    criteriaStates[item] 
-                                      ? 'bg-red-500 text-white' 
-                                      : 'bg-green-500 text-white'
+  {Object.entries(criteriaStates).map(([key, item], idx) => (
+    <motion.div
+      key={key}
+      className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
+        item.status === "warning"
+          ? "bg-red-50 border border-red-200"
+          : "bg-green-50 border border-green-200"
+      }`}
+      onClick={() =>
+        setIsOpen((prev) => ({
+          ...prev,
+          [`${email.id}_${key}`]: !prev[`${email.id}_${key}`],
+        }))
+      }
+      whileHover={{ scale: 1.02, x: 5 }}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.4 + idx * 0.1 }}
+    >
+                              <div className="flex justify-between items-center">
+                                <span
+                                  className={`font-medium ${
+                                    item.status === "warning" ? "text-red-700" : "text-green-700"
                                   }`}
-                                  whileHover={{ scale: 1.2 }}
                                 >
-                                  {criteriaStates[item] ? '!' : '✓'}
-                                </motion.div>
-                              </motion.div>
-                            ))}
-                          </div>
+                                  {readableCriteria[key] || key}
+                                </span>
+
+                                <div
+                                  className={`w-7 h-7 rounded-full flex items-center justify-center shadow-lg text-white ${
+                                    item.status === "warning" ? "bg-red-500" : "bg-green-500"
+                                  }`}
+                                >
+                                  {item.status === "warning" ? "!" : "✓"}
+                                </div>
+                              </div>
+
+                              {/* lý do */}
+                              {isOpen[`${email.id}_${key}`] && (
+                                <div className="mt-3 text-sm text-gray-700 bg-white p-3 rounded-lg border">
+                                  {item.reason}
+                                </div>
+                              )}
+                            </motion.div>
+                          ))}
+                        </div>
                         </motion.div>
 
                         {/* Khuyến nghị */}

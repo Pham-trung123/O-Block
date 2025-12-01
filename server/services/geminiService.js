@@ -1,5 +1,5 @@
 // server/services/geminiService.js
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -10,6 +10,9 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../.env") });
+console.log("👉 GeminiService thực sự được load từ file:", __filename);
+
+
 
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) console.warn("⚠️ Thiếu GEMINI_API_KEY trong file .env!");
@@ -19,20 +22,18 @@ if (!API_KEY) console.warn("⚠️ Thiếu GEMINI_API_KEY trong file .env!");
 // ========================
 let ai = null;
 try {
-  ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
-  console.log("✅ GoogleGenAI khởi tạo thành công.");
+  ai = new GoogleGenerativeAI(API_KEY);
+  console.log("✅ GoogleGenerativeAI khởi tạo thành công (SDK 0.24.1).");
 } catch (err) {
-  console.error("❌ Lỗi khởi tạo GoogleGenAI:", err.message);
-  ai = null;
+  console.error("❌ Lỗi khởi tạo Gemini:", err.message);
 }
 
 export class GeminiEmailAnalyzer {
   constructor() {
-    this.modelName = "gemini-2.0-flash"; // model chính
-    this.fallbackModel = "gemini-2.0-pro"; // fallback nếu flash lỗi
+    this.modelName = "gemini-2.0-flash";       // model chính
+    this.fallbackModel = "gemini-2.0-pro";     // fallback
     this.ai = ai;
   }
-
   // ========================
   // 🧾 PROMPT SOC CHUẨN HÓA
   // ========================
@@ -130,17 +131,47 @@ Trả về DUY NHẤT 1 JSON với cấu trúc:
 
 {
   "criteria": {
-    "suspiciousSender": true/false,
-    "weirdSubject": true/false,
-    "urgentThreat": true/false,
-    "sensitiveRequest": true/false,
-    "suspiciousLinks": true/false,
-    "dangerousAttachment": true/false,
-    "badGrammar": true/false,
-    "infoMismatch": true/false,
-    "unusualServer": true/false,
-    "phishingPattern": true/false
+  "sender": {
+    "status": "safe | warning",
+    "reason": "<Giải thích rõ ràng dựa trên nội dung email>"
   },
+  "subject": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "urgent": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "sensitiveInfo": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "links": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "attachments": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "grammar": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "infoMismatch": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "serverIP": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  },
+  "phishingPattern": {
+    "status": "safe | warning",
+    "reason": "<Giải thích>"
+  }
+},
   "score": 0-100,
 
   "isPhishing": true/false,
@@ -194,13 +225,49 @@ Trả về DUY NHẤT 1 JSON với cấu trúc:
         !this.hasPhishingSignals(emailContent.toLowerCase())
       ) {
         const riskScore = 10;
+        const criteria = {
+  sender: {
+    status: rulesMatched.some(r => r.includes("context")) ? "warning" : "safe",
+    reason: rulesMatched.some(r => r.includes("context"))
+      ? "Phát hiện dấu hiệu bất thường liên quan đến người gửi."
+      : "Không phát hiện vấn đề liên quan đến người gửi."
+  },
+  subject: {
+    status: lower.includes("khẩn") ? "warning" : "safe",
+    reason: lower.includes("khẩn")
+      ? "Chủ đề mang tính khẩn cấp, dễ là phishing."
+      : "Chủ đề bình thường."
+  },
+  links: {
+    status: rulesMatched.some(r => r.includes("technical")) ? "warning" : "safe",
+    reason: rulesMatched.some(r => r.includes("technical"))
+      ? "Phát hiện link hoặc domain không an toàn."
+      : "Không phát hiện liên kết nguy hiểm."
+  },
+  attachments: {
+    status: /(\.zip|\.exe|\.apk|\.scr)/i.test(lower) ? "warning" : "safe",
+    reason: /(\.zip|\.exe|\.apk|\.scr)/i.test(lower)
+      ? "Phát hiện file đính kèm rủi ro."
+      : "Không có tệp đính kèm nguy hiểm."
+  },
+  grammar: {
+    status: lower.includes("  ") ? "warning" : "safe",
+    reason: lower.includes("  ")
+      ? "Có dấu hiệu lỗi chính tả hoặc ngữ pháp bất thường."
+      : "Không phát hiện lỗi chính tả rõ ràng."
+  },
+  phishingPattern: {
+    status: isPhishing ? "warning" : "safe",
+    reason: isPhishing
+      ? "Nội dung chứa các mẫu hành vi phishing."
+      : "Không có dấu hiệu phishing rõ rệt."
+  }
+};
         return {
-          isPhishing: false,
+          criteria,
+          isPhishing,
           confidence: riskScore,
-          riskLevel: this.getRiskLevelFromRiskScore(riskScore),
-          type: ["SAFE"],
-          rulesMatched: [],
-          behaviorFlags: [],
+          riskLevel,
           analysis: {
             scamAnalysis: "Không phát hiện dấu hiệu scam/phishing rõ ràng.",
             manipulationAnalysis:
@@ -237,40 +304,50 @@ Trả về DUY NHẤT 1 JSON với cấu trúc:
   }
 
   // ========================
-  // 🔁 Retry Gemini với SDK @google/genai
-  // ========================
-  async retryGeminiRequest(prompt, originalContent, retries = 3, delay = 3000) {
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      for (const modelName of [this.modelName, this.fallbackModel]) {
-        try {
-          console.log(`🔍 [Thử lần ${attempt}] gọi model ${modelName}...`);
-          const result = await this.ai.models.generateContent({
-            model: modelName,
-            contents: [{ role: "user", parts: [{ text: prompt }] }]
-          });
+ // 🔁 Retry Gemini với SDK @google/generative-ai
+async retryGeminiRequest(prompt, originalContent, retries = 3, delay = 3000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    for (const modelName of [this.modelName, this.fallbackModel]) {
+      try {
+        console.log(`🔍 [Thử lần ${attempt}] gọi model ${modelName}...`);
 
-          const text = result.outputText;
-          if (!text || !text.trim()) {
-            console.warn("⚠️ Phản hồi Gemini rỗng — thử model/attempt khác.");
-            continue;
-          }
+        // ⚠️ LƯU Ý: SDK 0.24.1 yêu cầu prefix "models/"
+        const model = this.ai.getGenerativeModel({
+          model: modelName
+        });
 
-          console.log("✅ Nhận phản hồi Gemini, tiến hành parse JSON.");
-          const parsed = this.safeJsonParse(text, originalContent);
-          return parsed;
-        } catch (err) {
-          console.warn(`⚠️ Lỗi model ${modelName}: ${err.message}`);
-          if (err.message.includes("429")) {
-            console.warn(`⏳ Đợi ${delay / 1000}s rồi thử lại...`);
-            await new Promise((r) => setTimeout(r, delay));
-            delay *= 2;
-          }
+        // === SDK 0.24.1: generateContent(), không có startChat() ===
+        const result = await model.generateContent(prompt);
+
+
+        // === Lấy text (cú pháp chính xác của SDK 0.24.1) ===
+        const text = result.response.text();
+
+        if (!text || !text.trim()) {
+          console.warn("⚠️ Phản hồi Gemini rỗng — thử model/attempt khác.");
+          continue;
+        }
+
+        console.log("✅ Nhận phản hồi Gemini, tiến hành parse JSON.");
+        return this.safeJsonParse(text, originalContent);
+
+      } catch (err) {
+        console.warn(`⚠️ Lỗi model ${modelName}: ${err.message}`);
+
+        // === xử lý quá tải 429 ===
+        if (err.message.includes("429")) {
+          console.warn(`⏳ Đợi ${delay / 1000}s rồi thử lại...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          delay *= 2;
         }
       }
     }
-    console.error("🚫 Hết lượt thử model — chuyển sang fallback offline.");
-    return this.fallbackAnalysis(originalContent);
   }
+
+  console.error("🚫 Hết lượt thử model — chuyển sang fallback offline.");
+  return this.fallbackAnalysis(originalContent);
+}
+
 
   // ========================
   // 🧩 Parse JSON an toàn
