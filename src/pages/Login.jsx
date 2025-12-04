@@ -8,7 +8,7 @@ export default function Login({ isPopup }) {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const SITE_KEY = "6Lcw4RAsAAAAAIUhCAP1C5icEQBHf5LkmaUsQnbZ";
+  const SITE_KEY = "6LeVehksAAAAAKL01Etr0omj_5kk_3BfsNAlEmpH";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +44,10 @@ export default function Login({ isPopup }) {
       newErrors.email = "Email không hợp lệ! Chỉ hỗ trợ Gmail.";
 
     if (!password) newErrors.password = "Vui lòng nhập mật khẩu!";
-    if (!captchaToken) newErrors.general = "Vui lòng xác minh reCAPTCHA!";
+    if (!captchaToken) {
+  return setErrors({ general: "⚠️ reCAPTCHA đã hết hạn, vui lòng tick lại!" });
+}
+
 
     if (Object.keys(newErrors).length > 0) return setErrors(newErrors);
 
@@ -233,10 +236,16 @@ export default function Login({ isPopup }) {
 
     {/* CAPTCHA */}
     <div className="flex justify-center scale-95">
-      <ReCAPTCHA
-        sitekey={SITE_KEY}
-        onChange={(token) => setCaptchaToken(token)}
-      />
+<ReCAPTCHA
+  sitekey={SITE_KEY}
+  onChange={(token) => setCaptchaToken(token)}
+  onExpired={() => {
+    setCaptchaToken(null);  
+    setErrors({ general: "⚠️ Vui lòng tick lại reCAPTCHA!" });
+  }}
+/>
+
+
     </div>
 
     {/* LOGIN BUTTON */}
