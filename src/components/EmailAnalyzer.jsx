@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { FiAlertTriangle, FiCheck, FiX, FiChevronLeft, FiChevronRight, FiMail, FiShield, FiBarChart2, FiExternalLink, FiLoader, FiClock, FiUser, FiCalendar } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiCheck,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+  FiMail,
+  FiShield,
+  FiBarChart2,
+  FiExternalLink,
+  FiLoader,
+  FiClock,
+  FiUser,
+  FiCalendar,
+} from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function EmailAnalyzer() {
@@ -25,52 +39,55 @@ export default function EmailAnalyzer() {
   const [isOpen, setIsOpen] = useState({});
   const [scanningProgress, setScanningProgress] = useState(0);
 
-  // ⭐ Danh sách 10 tiêu chí
-  const criteriaList = [
-    "Người gửi đáng ngờ",
-    "Chủ đề bất thường",
-    "Nội dung khẩn cấp hoặc đe dọa",
-    "Yêu cầu cung cấp thông tin nhạy cảm",
-    "Liên kết URL đáng ngờ",
-    "File đính kèm rủi ro",
-    "Sai chính tả hoặc ngữ pháp",
-    "Mâu thuẫn thông tin trong email",
-    "Máy chủ/IP gửi bất thường",
-    "Dấu hiệu trùng mẫu email lừa đảo",
+  // ⭐ mở/đóng chi tiết từng tiêu chí & từng phần phân tích AI
+  const [openCriteria, setOpenCriteria] = useState({}); // { [emailId]: criteriaKey | null }
+  const [openDetail, setOpenDetail] = useState({}); // { [emailId]: sectionKey | null }
+
+  // ⭐ mapping 10 tiêu chí ↔ key trong JSON backend
+  const criteriaConfig = [
+    { label: "Người gửi đáng ngờ", key: "sender" },
+    { label: "Chủ đề bất thường", key: "subject" },
+    { label: "Nội dung khẩn cấp hoặc đe dọa", key: "urgent" },
+    { label: "Yêu cầu cung cấp thông tin nhạy cảm", key: "sensitiveInfo" },
+    { label: "Liên kết URL đáng ngờ", key: "links" },
+    { label: "File đính kèm rủi ro", key: "attachments" },
+    { label: "Sai chính tả hoặc ngữ pháp", key: "grammar" },
+    { label: "Mâu thuẫn thông tin trong email", key: "infoMismatch" },
+    { label: "Máy chủ/IP gửi bất thường", key: "serverIP" },
+    { label: "Dấu hiệu trùng mẫu email lừa đảo", key: "phishingPattern" },
   ];
 
-  // ⭐ mapping từ AI → ✔️ hoặc —
-  const mapCriteriaToSignals = (analysis, rulesMatched, behaviorFlags) => {
+  // ⭐ fallback mapping nếu backend không trả "criteria"
+  const mapFallbackCriteria = (analysis, rulesMatched, behaviorFlags) => {
     if (!analysis) return {};
 
     return {
-      "Người gửi đáng ngờ": analysis.domainTrust !== "TRUSTED",
-      "Chủ đề bất thường": behaviorFlags?.includes("high_urgency"),
-      "Nội dung khẩn cấp hoặc đe dọa":
+      sender: analysis.domainTrust && analysis.domainTrust !== "TRUSTED",
+      subject: behaviorFlags?.includes("high_urgency"),
+      urgent:
         rulesMatched?.some((r) => r.includes("threat")) ||
         behaviorFlags?.includes("high_urgency"),
-      "Yêu cầu cung cấp thông tin nhạy cảm":
-        rulesMatched?.includes("scam:sensitive_request"),
-      "Liên kết URL đáng ngờ":
-        rulesMatched?.some((r) => r.startsWith("technical:")),
-      "File đính kèm rủi ro":
-        analysis?.technicalIndicators?.toLowerCase()?.includes("file"),
-      "Sai chính tả hoặc ngữ pháp":
-        analysis?.scamAnalysis?.includes("chính tả") ||
-        analysis?.scamAnalysis?.includes("ngữ pháp"),
-      "Mâu thuẫn thông tin trong email":
-        analysis?.contextAnalysis?.includes("bất thường") ||
-        analysis?.contextAnalysis?.includes("không phù hợp"),
-      "Máy chủ/IP gửi bất thường":
+      sensitiveInfo: rulesMatched?.includes("scam:sensitive_request"),
+      links: rulesMatched?.some((r) => r.startsWith("technical:")),
+      attachments:
+        analysis?.technicalIndicators?.toLowerCase()?.includes("file") ||
+        analysis?.technicalIndicators?.toLowerCase()?.includes("đính kèm"),
+      grammar:
+        analysis?.scamAnalysis?.toLowerCase()?.includes("chính tả") ||
+        analysis?.scamAnalysis?.toLowerCase()?.includes("ngữ pháp"),
+      infoMismatch:
+        analysis?.contextAnalysis?.toLowerCase()?.includes("bất thường") ||
+        analysis?.contextAnalysis?.toLowerCase()?.includes("không phù hợp"),
+      serverIP:
         analysis.domainTrust === "SUSPICIOUS" ||
         analysis.domainTrust === "UNTRUSTED",
-      "Dấu hiệu trùng mẫu email lừa đảo":
+      phishingPattern:
         rulesMatched?.some((r) => r.startsWith("scam:")) ||
         rulesMatched?.some((r) => r.startsWith("psychological:")),
     };
   };
 
-  // ⭐ tính mức rủi ro bằng tiêu chí
+  // ⭐ fallback nếu thiếu riskLevel từ backend
   const riskLevelFromCriteriaScore = (score) => {
     if (score >= 90) return "CRITICAL";
     if (score >= 60) return "HIGH";
@@ -84,11 +101,13 @@ export default function EmailAnalyzer() {
   useEffect(() => {
     if (!user) return;
     if (localStorage.getItem("gmail_connected") === "1") {
-    fetchEmails();}
+      fetchEmails();
+    }
     const params = new URLSearchParams(window.location.search);
     if (params.get("gmail_connected")) {
-    localStorage.setItem("gmail_connected", "1");   // ⭐ thêm dòng này
-    fetchEmails();}
+      localStorage.setItem("gmail_connected", "1");
+      fetchEmails();
+    }
   }, [user]);
 
   const fetchEmails = async (pageToken = null) => {
@@ -151,6 +170,7 @@ export default function EmailAnalyzer() {
       });
 
       const data = await response.json();
+      console.log("KẾT QUẢ AI:", data.result);
 
       if (data.success) {
         setResults((prev) => ({
@@ -174,30 +194,30 @@ export default function EmailAnalyzer() {
       setLoading(false);
     }
   };
-const saveAnalysis = async (id, content, raw_result) => {
-  try {
-    await fetch("http://localhost:3000/api/save-analysis", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        email_content: content,
-        raw_result: raw_result
-      }),
-    });
 
-    console.log("💾 Đã lưu kết quả AI vào DB!");
-  } catch (err) {
-    console.error("❌ Lỗi save-analysis:", err);
-  }
-};
+  const saveAnalysis = async (id, content, raw_result) => {
+    try {
+      await fetch("http://localhost:3000/api/save-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          email_content: content,
+          raw_result: raw_result,
+        }),
+      });
+
+      console.log("💾 Đã lưu kết quả AI vào DB!");
+    } catch (err) {
+      console.error("❌ Lỗi save-analysis:", err);
+    }
+  };
 
   // =============================
   // Quét nhiều email
   // =============================
   const handleAnalyzeSelected = async () => {
-    if (selected.length === 0)
-      return alert("Vui lòng chọn email để quét!");
+    if (selected.length === 0) return alert("Vui lòng chọn email để quét!");
 
     setLoading(true);
     setScanningProgress(0);
@@ -205,7 +225,7 @@ const saveAnalysis = async (id, content, raw_result) => {
     try {
       for (let i = 0; i < selected.length; i++) {
         const id = selected[i];
-        if (results[id]) continue;
+
         const email = allEmails.find((e) => e.id === id);
         if (email) {
           await handleAnalyze(email.snippet || email.body, id);
@@ -268,15 +288,35 @@ const saveAnalysis = async (id, content, raw_result) => {
     }
   };
 
+  // Badge màu cho từng loại section phân tích
+  const sectionBadgeColor = (key) => {
+    switch (key) {
+      case "scamAnalysis":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "manipulationAnalysis":
+        return "bg-orange-100 text-orange-700 border-orange-200";
+      case "threatAnalysis":
+        return "bg-rose-100 text-rose-700 border-rose-200";
+      case "contextAnalysis":
+        return "bg-amber-100 text-amber-700 border-amber-200";
+      case "technicalIndicators":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      case "summary":
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -286,9 +326,9 @@ const saveAnalysis = async (id, content, raw_result) => {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: "easeOut"
-      }
-    }
+        ease: "easeOut",
+      },
+    },
   };
 
   // =============================
@@ -373,8 +413,10 @@ const saveAnalysis = async (id, content, raw_result) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Sử dụng <span className="font-bold text-purple-600">AI tiên tiến</span> để phát hiện và cảnh báo các email đáng ngờ. 
-          Bảo vệ bạn khỏi các cuộc tấn công mạng tinh vi với độ chính xác 99.8%.
+          Sử dụng{" "}
+          <span className="font-bold text-purple-600">AI tiên tiến</span> để
+          phát hiện và cảnh báo các email đáng ngờ. Bảo vệ bạn khỏi các cuộc
+          tấn công mạng tinh vi với độ chính xác 99.8%.
         </motion.p>
       </motion.div>
 
@@ -392,10 +434,16 @@ const saveAnalysis = async (id, content, raw_result) => {
           >
             <FiMail className="text-blue-500 text-3xl" />
           </motion.div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-3">Chưa kết nối Gmail</h3>
-          <p className="text-gray-600 mb-8 text-lg">Kết nối với Gmail để bắt đầu phân tích email bằng AI</p>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">
+            Chưa kết nối Gmail
+          </h3>
+          <p className="text-gray-600 mb-8 text-lg">
+            Kết nối với Gmail để bắt đầu phân tích email bằng AI
+          </p>
           <motion.button
-            onClick={() => (window.location.href = "http://localhost:3000/api/gmail/login")}
+            onClick={() =>
+              (window.location.href = "http://localhost:3000/api/gmail/login")
+            }
             className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold hover:shadow-2xl transition-all duration-300 hover:from-green-600 hover:to-emerald-700 transform hover:-translate-y-1"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -453,12 +501,18 @@ const saveAnalysis = async (id, content, raw_result) => {
                 onClick={handleAnalyzeSelected}
                 disabled={selected.length === 0 || loading}
                 className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-xl hover:shadow-2xl transition-all duration-300 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                whileHover={{ scale: selected.length > 0 && !loading ? 1.05 : 1, y: -2 }}
+                whileHover={{
+                  scale: selected.length > 0 && !loading ? 1.05 : 1,
+                  y: -2,
+                }}
                 whileTap={{ scale: 0.95 }}
               >
                 <motion.div
                   animate={loading ? { rotate: 360 } : {}}
-                  transition={{ duration: 2, repeat: loading ? Infinity : 0 }}
+                  transition={{
+                    duration: 2,
+                    repeat: loading ? Infinity : 0,
+                  }}
                 >
                   <FiShield className="text-xl" />
                 </motion.div>
@@ -479,11 +533,17 @@ const saveAnalysis = async (id, content, raw_result) => {
                 <div className="flex items-center gap-3 mb-2">
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                   >
                     <FiLoader className="text-purple-500 text-xl" />
                   </motion.div>
-                  <span className="font-semibold text-purple-700">Đang quét {selected.length} email...</span>
+                  <span className="font-semibold text-purple-700">
+                    Đang quét {selected.length} email...
+                  </span>
                 </div>
                 <div className="w-full bg-white rounded-full h-3 overflow-hidden shadow-inner">
                   <motion.div
@@ -510,18 +570,89 @@ const saveAnalysis = async (id, content, raw_result) => {
             {displayEmails.map((email) => {
               const emailResult = results[email.id];
 
-              const criteriaStates = emailResult
-                ? mapCriteriaToSignals(
-                    emailResult.analysis,
-                    emailResult.rulesMatched,
-                    emailResult.behaviorFlags
-                  )
-                : {};
+              // ⭐ TÍNH CRITERIA + RISK DỰA TRÊN KẾT QUẢ AI
+              let criteriaStates = {};
+              let criteriaReasons = {};
+              let criteriaScore = 0;
+              let finalRisk = "LOW";
 
-              const criteriaScore =
-                Object.values(criteriaStates).filter(Boolean).length * 10;
+              if (emailResult) {
+                const aiCriteria = emailResult.criteria || {};
+                const fallbackCriteria = mapFallbackCriteria(
+                  emailResult.analysis,
+                  emailResult.rulesMatched,
+                  emailResult.behaviorFlags
+                );
 
-              const finalRisk = riskLevelFromCriteriaScore(criteriaScore);
+                criteriaConfig.forEach((cfg) => {
+                  const fromAI = aiCriteria?.[cfg.key];
+                  if (fromAI) {
+                    const isWarning = fromAI.status === "warning";
+                    criteriaStates[cfg.key] = isWarning;
+                    criteriaReasons[cfg.key] =
+                      fromAI.reason ||
+                      (isWarning
+                        ? "AI phát hiện dấu hiệu bất thường cho tiêu chí này."
+                        : "AI không phát hiện dấu hiệu đáng ngờ rõ rệt.");
+                  } else {
+                    const fb = fallbackCriteria?.[cfg.key];
+                    criteriaStates[cfg.key] = !!fb;
+                    criteriaReasons[cfg.key] = fb
+                      ? "Bộ luật offline phát hiện dấu hiệu bất thường cho tiêu chí này."
+                      : "Không phát hiện dấu hiệu rõ rệt cho tiêu chí này (offline).";
+                  }
+                });
+
+                // Điểm: ưu tiên score từ backend, nếu không có thì = số warning * 10
+                if (typeof emailResult.score === "number") {
+                  criteriaScore = emailResult.score;
+                } else {
+                  criteriaScore =
+                    Object.values(criteriaStates).filter(Boolean).length * 10;
+                }
+
+                // Risk: ưu tiên riskLevel backend, fallback theo score
+                finalRisk =
+                  emailResult.riskLevel ||
+                  riskLevelFromCriteriaScore(criteriaScore);
+              }
+
+              const analysis = emailResult?.analysis || {};
+              const detailSections = [
+                {
+                  key: "scamAnalysis",
+                  title: "Dấu hiệu lừa đảo / Scam",
+                  text: analysis.scamAnalysis,
+                },
+                {
+                  key: "manipulationAnalysis",
+                  title: "Thao túng tâm lý / Social Engineering",
+                  text: analysis.manipulationAnalysis,
+                },
+                {
+                  key: "threatAnalysis",
+                  title: "Ngôn ngữ đe dọa / Uy hiếp",
+                  text: analysis.threatAnalysis,
+                },
+                {
+                  key: "contextAnalysis",
+                  title: "Ngữ cảnh & vai trò người gửi",
+                  text: analysis.contextAnalysis,
+                },
+                {
+                  key: "technicalIndicators",
+                  title: "Chỉ báo kỹ thuật (links, domain, file)",
+                  text: analysis.technicalIndicators,
+                },
+                {
+                  key: "summary",
+                  title: "Tổng kết AI",
+                  text: analysis.summary,
+                },
+              ].filter((s) => s.text && s.text.trim().length > 0);
+
+              const currentOpenCriteria = openCriteria[email.id] || null;
+              const currentOpenDetail = openDetail[email.id] || null;
 
               return (
                 <motion.div
@@ -540,7 +671,12 @@ const saveAnalysis = async (id, content, raw_result) => {
                         whileTap={{ scale: 0.9 }}
                       />
 
-                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleAnalyze(email.snippet || email.body, email.id)}>
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() =>
+                          handleAnalyze(email.snippet || email.body, email.id)
+                        }
+                      >
                         <div className="flex items-center gap-3 mb-3">
                           <h4 className="font-bold text-gray-900 text-lg truncate flex items-center gap-2">
                             <FiMail className="text-blue-500 flex-shrink-0" />
@@ -548,10 +684,15 @@ const saveAnalysis = async (id, content, raw_result) => {
                           </h4>
                           {emailResult && (
                             <motion.span
-                              className={`px-3 py-1.5 text-sm font-bold rounded-full ${riskBadgeColor(finalRisk)} shadow-lg`}
+                              className={`px-3 py-1.5 text-sm font-bold rounded-full ${riskBadgeColor(
+                                finalRisk
+                              )} shadow-lg`}
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 500,
+                              }}
                             >
                               {finalRisk}
                             </motion.span>
@@ -564,7 +705,7 @@ const saveAnalysis = async (id, content, raw_result) => {
                           </span>
                           <span className="flex items-center gap-2">
                             <FiCalendar className="text-green-500" />
-                            {new Date(email.date).toLocaleString('vi-VN')}
+                            {new Date(email.date).toLocaleString("vi-VN")}
                           </span>
                         </div>
                         <p className="text-gray-700 line-clamp-2 bg-gray-50/50 p-2 rounded-lg">
@@ -574,25 +715,36 @@ const saveAnalysis = async (id, content, raw_result) => {
                     </div>
 
                     <motion.button
-                      onClick={() => handleAnalyze(email.snippet || email.body, email.id)}
+                      onClick={() =>
+                        handleAnalyze(email.snippet || email.body, email.id)
+                      }
                       disabled={itemLoading[email.id]}
                       className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm rounded-xl hover:shadow-xl transition-all duration-300 disabled:opacity-50 font-semibold min-w-[140px] justify-center"
-                      whileHover={{ scale: itemLoading[email.id] ? 1 : 1.05, y: -2 }}
+                      whileHover={{
+                        scale: itemLoading[email.id] ? 1 : 1.05,
+                        y: -2,
+                      }}
                       whileTap={{ scale: 0.95 }}
                     >
                       {itemLoading[email.id] ? (
                         <>
                           <motion.div
                             className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            animate={{
+                              rotate: 360,
+                            }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
                           />
                           Đang phân tích...
                         </>
                       ) : (
                         <>
                           <FiShield className="text-base" />
-                          {emailResult ? 'Phân tích lại' : 'Phân tích'}
+                          {emailResult ? "Phân tích lại" : "Phân tích"}
                         </>
                       )}
                     </motion.button>
@@ -609,7 +761,9 @@ const saveAnalysis = async (id, content, raw_result) => {
                         <motion.div
                           className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                           initial={{ width: "0%" }}
-                          animate={{ width: `${progress[email.id] || 0}%` }}
+                          animate={{
+                            width: `${progress[email.id] || 0}%`,
+                          }}
                           transition={{ duration: 0.3 }}
                         />
                       </div>
@@ -622,13 +776,21 @@ const saveAnalysis = async (id, content, raw_result) => {
                   {/* Nút xem lại nếu đã phân tích */}
                   {!isOpen[email.id] && results[email.id] && (
                     <motion.button
-                      onClick={() => setIsOpen((prev) => ({ ...prev, [email.id]: true }))}
+                      onClick={() =>
+                        setIsOpen((prev) => ({
+                          ...prev,
+                          [email.id]: true,
+                        }))
+                      }
                       className="mt-3 text-sm text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-2 transition-colors group"
                       whileHover={{ x: 5 }}
                     >
                       <motion.span
                         animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                        }}
                       >
                         👁
                       </motion.span>
@@ -644,17 +806,24 @@ const saveAnalysis = async (id, content, raw_result) => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className={`mt-6 p-6 rounded-2xl border-2 relative overflow-hidden ${riskColor(finalRisk)}`}
+                        className={`mt-6 p-6 rounded-2xl border-2 relative overflow-hidden ${riskColor(
+                          finalRisk
+                        )}`}
                       >
                         {/* Background pattern */}
                         <div className="absolute inset-0 opacity-5">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-current rounded-full -translate-y-16 translate-x-16"></div>
-                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-current rounded-full translate-y-12 -translate-x-12"></div>
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-current rounded-full -translate-y-16 translate-x-16" />
+                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-current rounded-full translate-y-12 -translate-x-12" />
                         </div>
 
                         {/* nút đóng */}
                         <motion.button
-                          onClick={() => setIsOpen((prev) => ({ ...prev, [email.id]: false }))}
+                          onClick={() =>
+                            setIsOpen((prev) => ({
+                              ...prev,
+                              [email.id]: false,
+                            }))
+                          }
                           className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-xl hover:bg-white/50 z-10"
                           whileHover={{ scale: 1.1, rotate: 90 }}
                           whileTap={{ scale: 0.9 }}
@@ -665,9 +834,14 @@ const saveAnalysis = async (id, content, raw_result) => {
                         {/* Header kết quả */}
                         <div className="flex items-center gap-4 mb-6 relative z-10">
                           <motion.div
-                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl ${riskBadgeColor(finalRisk)}`}
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl ${riskBadgeColor(
+                              finalRisk
+                            )}`}
                             whileHover={{ scale: 1.1, rotate: 5 }}
-                            transition={{ type: "spring", stiffness: 300 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                            }}
                           >
                             <FiAlertTriangle className="text-xl" />
                           </motion.div>
@@ -685,12 +859,22 @@ const saveAnalysis = async (id, content, raw_result) => {
                               animate={{ opacity: 1 }}
                               transition={{ delay: 0.2 }}
                             >
-                              Điểm đánh giá: {criteriaScore}%
+                              Điểm đánh giá: {Math.round(criteriaScore)}%
                             </motion.p>
+                            {emailResult.explanation && (
+                              <motion.p
+                                className="text-sm mt-1 opacity-80"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                              >
+                                {emailResult.explanation}
+                              </motion.p>
+                            )}
                           </div>
                         </div>
 
-                        {/* BẢNG TIÊU CHÍ */}
+                        {/* BẢNG TIÊU CHÍ + ACCORDION */}
                         <motion.div
                           className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-5 relative z-10"
                           initial={{ opacity: 0, y: 20 }}
@@ -700,7 +884,10 @@ const saveAnalysis = async (id, content, raw_result) => {
                           <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-3 text-lg">
                             <motion.div
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                              }}
                             >
                               <FiCheck className="text-green-500 text-xl" />
                             </motion.div>
@@ -708,36 +895,93 @@ const saveAnalysis = async (id, content, raw_result) => {
                           </h4>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {criteriaList.map((item, idx) => (
-                              <motion.div
-                                key={idx}
-                                className={`flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
-                                  criteriaStates[item] 
-                                    ? 'bg-red-50 border border-red-200' 
-                                    : 'bg-green-50 border border-green-200'
-                                }`}
-                                whileHover={{ scale: 1.02, x: 5 }}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.4 + idx * 0.1 }}
-                              >
-                                <span className={`text-sm font-medium ${
-                                  criteriaStates[item] ? 'text-red-700' : 'text-green-700'
-                                }`}>
-                                  {item}
-                                </span>
+                            {criteriaConfig.map((cfg, idx) => {
+                              const active = criteriaStates[cfg.key];
+                              const reason = criteriaReasons[cfg.key];
+                              const opened =
+                                currentOpenCriteria === cfg.key;
+
+                              return (
                                 <motion.div
-                                  className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
-                                    criteriaStates[item] 
-                                      ? 'bg-red-500 text-white' 
-                                      : 'bg-green-500 text-white'
+                                  key={cfg.key}
+                                  className={`group cursor-pointer relative rounded-xl border p-3 transition-all duration-300 ${
+                                    active
+                                      ? "bg-red-50 border-red-200"
+                                      : "bg-green-50 border-green-200"
                                   }`}
-                                  whileHover={{ scale: 1.2 }}
+                                  whileHover={{ scale: 1.02, x: 5 }}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{
+                                    delay: 0.4 + idx * 0.08,
+                                  }}
+                                  onClick={() =>
+                                    setOpenCriteria((prev) => ({
+                                      ...prev,
+                                      [email.id]:
+                                        prev[email.id] === cfg.key
+                                          ? null
+                                          : cfg.key,
+                                    }))
+                                  }
                                 >
-                                  {criteriaStates[item] ? '!' : '✓'}
+                                  <div className="flex items-center justify-between gap-3">
+                                    <span
+                                      className={`text-sm font-medium ${
+                                        active
+                                          ? "text-red-700"
+                                          : "text-green-700"
+                                      }`}
+                                    >
+                                      {cfg.label}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <motion.div
+                                        className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${
+                                          active
+                                            ? "bg-red-500 text-white"
+                                            : "bg-green-500 text-white"
+                                        }`}
+                                        whileHover={{ scale: 1.15 }}
+                                      >
+                                        {active ? "!" : "✓"}
+                                      </motion.div>
+                                      <motion.div
+                                        animate={{
+                                          rotate: opened ? 90 : 0,
+                                        }}
+                                        className="text-xs text-gray-500"
+                                      >
+                                        <FiChevronRight />
+                                      </motion.div>
+                                    </div>
+                                  </div>
+
+                                  <AnimatePresence>
+                                    {opened && (
+                                      <motion.div
+                                        initial={{
+                                          opacity: 0,
+                                          height: 0,
+                                        }}
+                                        animate={{
+                                          opacity: 1,
+                                          height: "auto",
+                                        }}
+                                        exit={{
+                                          opacity: 0,
+                                          height: 0,
+                                        }}
+                                        className="mt-2 text-xs text-gray-700 bg-white/70 rounded-lg p-2 border border-dashed border-gray-200"
+                                      >
+                                        {reason ||
+                                          "AI không cung cấp giải thích chi tiết cho tiêu chí này."}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                 </motion.div>
-                              </motion.div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </motion.div>
 
@@ -754,19 +998,123 @@ const saveAnalysis = async (id, content, raw_result) => {
                               Khuyến nghị bảo mật:
                             </h4>
                             <ul className="space-y-2">
-                              {emailResult.recommendations?.map((r, i) => (
+                              {emailResult.recommendations.map((r, i) => (
                                 <motion.li
                                   key={i}
-                                  className="text-gray-700 flex items-start gap-3 p-2 rounded-lg bg-white/50 backdrop-blur-sm"
+                                  className={`text-gray-700 flex items-start gap-3 p-2 rounded-lg ${
+                                    finalRisk === "CRITICAL"
+                                      ? "bg-red-100 text-red-800 font-semibold border border-red-300"
+                                      : "bg-white/50 backdrop-blur-sm"
+                                  }`}
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: 0.9 + i * 0.1 }}
+                                  transition={{
+                                    delay: 0.9 + i * 0.1,
+                                  }}
                                 >
-                                  <span className="text-purple-500 font-bold mt-0.5">•</span>
+                                  <span className="text-purple-500 font-bold mt-0.5">
+                                    •
+                                  </span>
                                   {r}
                                 </motion.li>
                               ))}
                             </ul>
+
+                            {finalRisk === "CRITICAL" && (
+                              <div className="mt-4 p-4 bg-red-600 text-white rounded-xl font-bold text-lg shadow-lg">
+                                ❌ NGUY HIỂM: Email chứa nội dung đe dọa nghiêm
+                                trọng.{" "}
+                                <span className="underline">
+                                  HÃY XÓA EMAIL NÀY NGAY LẬP TỨC
+                                </span>
+                                .<br />
+                                📢 Nếu cảm thấy bị đe dọa an toàn cá nhân, hãy
+                                báo cáo với{" "}
+                                <span className="underline">
+                                  cơ quan chức năng có thẩm quyền
+                                </span>
+                                .
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+
+                        {/* ACCORDION PHÂN TÍCH SÂU CỦA AI */}
+                        {detailSections.length > 0 && (
+                          <motion.div
+                            className="mt-6 relative z-10"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1.0 }}
+                          >
+                            <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-3 text-lg">
+                              <FiBarChart2 className="text-blue-500 text-xl" />
+                              Phân tích chi tiết của AI
+                            </h4>
+
+                            <div className="space-y-3">
+                              {detailSections.map((sec) => {
+                                const opened =
+                                  currentOpenDetail === sec.key;
+                                const badgeCls = sectionBadgeColor(sec.key);
+                                return (
+                                  <motion.div
+                                    key={sec.key}
+                                    className={`rounded-xl border p-3 bg-white/80 backdrop-blur-sm cursor-pointer transition-all duration-300 hover:shadow-md`}
+                                    whileHover={{ y: -2 }}
+                                    onClick={() =>
+                                      setOpenDetail((prev) => ({
+                                        ...prev,
+                                        [email.id]:
+                                          prev[email.id] === sec.key
+                                            ? null
+                                            : sec.key,
+                                      }))
+                                    }
+                                  >
+                                    <div className="flex items-center justify-between gap-3">
+                                      <div className="flex items-center gap-3">
+                                        <span
+                                          className={`px-2 py-1 text-xs font-semibold rounded-full border ${badgeCls}`}
+                                        >
+                                          {sec.title}
+                                        </span>
+                                      </div>
+                                      <motion.div
+                                        animate={{
+                                          rotate: opened ? 90 : 0,
+                                        }}
+                                        className="text-gray-500 text-sm"
+                                      >
+                                        <FiChevronRight />
+                                      </motion.div>
+                                    </div>
+
+                                    <AnimatePresence>
+                                      {opened && (
+                                        <motion.div
+                                          initial={{
+                                            opacity: 0,
+                                            height: 0,
+                                          }}
+                                          animate={{
+                                            opacity: 1,
+                                            height: "auto",
+                                          }}
+                                          exit={{
+                                            opacity: 0,
+                                            height: 0,
+                                          }}
+                                          className="mt-2 text-sm text-gray-700 leading-relaxed"
+                                        >
+                                          {sec.text}
+                                        </motion.div>
+                                      )}
+                                    </AnimatePresence>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
                           </motion.div>
                         )}
                       </motion.div>
@@ -786,15 +1134,20 @@ const saveAnalysis = async (id, content, raw_result) => {
           >
             <div className="text-gray-600 flex items-center gap-2">
               <FiClock className="text-purple-500" />
-              Hiển thị {(currentPage - 1) * emailsPerPage + 1} - {Math.min(currentPage * emailsPerPage, allEmails.length)} của {allEmails.length} email
+              Hiển thị {(currentPage - 1) * emailsPerPage + 1} -{" "}
+              {Math.min(currentPage * emailsPerPage, allEmails.length)} của{" "}
+              {allEmails.length} email
             </div>
-            
+
             <div className="flex items-center gap-2">
               <motion.button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
-                whileHover={{ scale: currentPage !== 1 ? 1.05 : 1, x: -2 }}
+                whileHover={{
+                  scale: currentPage !== 1 ? 1.05 : 1,
+                  x: -2,
+                }}
                 whileTap={{ scale: 0.95 }}
               >
                 <FiChevronLeft className="text-xl" />
@@ -821,7 +1174,10 @@ const saveAnalysis = async (id, content, raw_result) => {
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
-                whileHover={{ scale: currentPage !== totalPages ? 1.05 : 1, x: 2 }}
+                whileHover={{
+                  scale: currentPage !== totalPages ? 1.05 : 1,
+                  x: 2,
+                }}
                 whileTap={{ scale: 0.95 }}
               >
                 Sau
@@ -869,7 +1225,11 @@ const saveAnalysis = async (id, content, raw_result) => {
               <motion.div
                 className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
               />
               <motion.h3
                 className="text-xl font-bold text-gray-800"
@@ -891,7 +1251,7 @@ const saveAnalysis = async (id, content, raw_result) => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Error Message */}
       <AnimatePresence>
         {error && (

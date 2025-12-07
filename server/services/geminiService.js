@@ -4,8 +4,6 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-
-
 // ========================
 // ⚙️ Load biến môi trường
 // ========================
@@ -13,8 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../.env") });
 console.log("👉 GeminiService thực sự được load từ file:", __filename);
-
-
 
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) console.warn("⚠️ Thiếu GEMINI_API_KEY trong file .env!");
@@ -36,6 +32,7 @@ export class GeminiEmailAnalyzer {
     this.fallbackModel = "gemini-2.0-pro";     // fallback
     this.ai = ai;
   }
+
   // ========================
   // 🧾 PROMPT SOC CHUẨN HÓA
   // ========================
@@ -133,47 +130,47 @@ Trả về DUY NHẤT 1 JSON với cấu trúc:
 
 {
   "criteria": {
-  "sender": {
-    "status": "safe | warning",
-    "reason": "<Giải thích rõ ràng dựa trên nội dung email>"
+    "sender": {
+      "status": "safe | warning",
+      "reason": "<Giải thích rõ ràng dựa trên nội dung email>"
+    },
+    "subject": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "urgent": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "sensitiveInfo": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "links": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "attachments": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "grammar": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "infoMismatch": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "serverIP": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    },
+    "phishingPattern": {
+      "status": "safe | warning",
+      "reason": "<Giải thích>"
+    }
   },
-  "subject": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "urgent": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "sensitiveInfo": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "links": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "attachments": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "grammar": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "infoMismatch": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "serverIP": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  },
-  "phishingPattern": {
-    "status": "safe | warning",
-    "reason": "<Giải thích>"
-  }
-},
   "score": 0-100,
 
   "isPhishing": true/false,
@@ -218,80 +215,6 @@ Trả về DUY NHẤT 1 JSON với cấu trúc:
     try {
       if (!emailContent?.trim()) throw new Error("Nội dung email trống.");
 
-      // Trích domain & phân tích độ tin cậy
-      const domainTrust = this.getDomainTrust(emailContent);
-
-      // Nếu domain TRUSTED & ít tín hiệu phishing → coi là LOW risk (rule nhanh)
-      if (
-        domainTrust === "TRUSTED" &&
-        !this.hasPhishingSignals(emailContent.toLowerCase())
-      ) {
-        const riskScore = 10;
-        const criteria = {
-  sender: {
-    status: rulesMatched.some(r => r.includes("context")) ? "warning" : "safe",
-    reason: rulesMatched.some(r => r.includes("context"))
-      ? "Phát hiện dấu hiệu bất thường liên quan đến người gửi."
-      : "Không phát hiện vấn đề liên quan đến người gửi."
-  },
-  subject: {
-    status: lower.includes("khẩn") ? "warning" : "safe",
-    reason: lower.includes("khẩn")
-      ? "Chủ đề mang tính khẩn cấp, dễ là phishing."
-      : "Chủ đề bình thường."
-  },
-  links: {
-    status: rulesMatched.some(r => r.includes("technical")) ? "warning" : "safe",
-    reason: rulesMatched.some(r => r.includes("technical"))
-      ? "Phát hiện link hoặc domain không an toàn."
-      : "Không phát hiện liên kết nguy hiểm."
-  },
-  attachments: {
-    status: /(\.zip|\.exe|\.apk|\.scr)/i.test(lower) ? "warning" : "safe",
-    reason: /(\.zip|\.exe|\.apk|\.scr)/i.test(lower)
-      ? "Phát hiện file đính kèm rủi ro."
-      : "Không có tệp đính kèm nguy hiểm."
-  },
-  grammar: {
-    status: lower.includes("  ") ? "warning" : "safe",
-    reason: lower.includes("  ")
-      ? "Có dấu hiệu lỗi chính tả hoặc ngữ pháp bất thường."
-      : "Không phát hiện lỗi chính tả rõ ràng."
-  },
-  phishingPattern: {
-    status: isPhishing ? "warning" : "safe",
-    reason: isPhishing
-      ? "Nội dung chứa các mẫu hành vi phishing."
-      : "Không có dấu hiệu phishing rõ rệt."
-  }
-};
-        return {
-          criteria,
-          isPhishing,
-          confidence: riskScore,
-          riskLevel,
-          analysis: {
-            scamAnalysis: "Không phát hiện dấu hiệu scam/phishing rõ ràng.",
-            manipulationAnalysis:
-              "Không có dấu hiệu thao túng tâm lý đáng kể. Ngôn ngữ bình thường.",
-            threatAnalysis: "Không phát hiện đe dọa hay uy hiếp.",
-            contextAnalysis:
-              "Ngữ cảnh và nội dung phù hợp với domain người gửi được đánh giá là uy tín.",
-            technicalIndicators:
-              "Không phát hiện liên kết hoặc tệp đính kèm đáng ngờ.",
-            professionalFraudAnalysis:
-              "Không có dấu hiệu lừa đảo tinh vi, nội dung tương đối bình thường.",
-            domainTrust,
-            summary: "Email có vẻ an toàn, đến từ domain đáng tin cậy."
-          },
-          recommendations: [
-            "Có thể đọc và xử lý bình thường.",
-            "Như mọi email khác, vẫn nên cảnh giác trước khi click link."
-          ],
-          explanation: "Email đến từ domain uy tín và nội dung không có dấu hiệu bất thường."
-        };
-      }
-
       if (!this.ai) {
         console.warn("⚠️ Không có model AI, dùng phân tích fallback offline.");
         return this.fallbackAnalysis(emailContent);
@@ -306,53 +229,44 @@ Trả về DUY NHẤT 1 JSON với cấu trúc:
   }
 
   // ========================
- // 🔁 Retry Gemini với SDK @google/generative-ai
-async retryGeminiRequest(prompt, originalContent, retries = 3, delay = 3000) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    for (const modelName of [this.modelName, this.fallbackModel]) {
-      try {
-        console.log(`🔍 [Thử lần ${attempt}] gọi model ${modelName}...`);
+  // 🔁 Retry Gemini với SDK @google/generative-ai
+  // ========================
+  async retryGeminiRequest(prompt, originalContent, retries = 3, delay = 3000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      for (const modelName of [this.modelName, this.fallbackModel]) {
+        try {
+          console.log(`🔍 [Thử lần ${attempt}] gọi model ${modelName}...`);
 
-        // ⚠️ LƯU Ý: SDK 0.24.1 yêu cầu prefix "models/"
-        const model = this.ai.getGenerativeModel({
-          model: modelName
-        });
+          const model = this.ai.getGenerativeModel({ model: modelName });
 
-        // === SDK 0.24.1: generateContent(), không có startChat() ===
-        const result = await model.generateContent(prompt);
+          const result = await model.generateContent(prompt);
+          const text = result.response.text();
 
+          if (!text || !text.trim()) {
+            console.warn("⚠️ Phản hồi Gemini rỗng — thử model/attempt khác.");
+            continue;
+          }
 
-        // === Lấy text (cú pháp chính xác của SDK 0.24.1) ===
-        const text = result.response.text();
+          console.log("✅ Nhận phản hồi Gemini, tiến hành parse JSON.");
+          return this.safeJsonParse(text, originalContent);
+        } catch (err) {
+          console.warn(`⚠️ Lỗi model ${modelName}: ${err.message}`);
 
-        if (!text || !text.trim()) {
-          console.warn("⚠️ Phản hồi Gemini rỗng — thử model/attempt khác.");
-          continue;
-        }
-
-        console.log("✅ Nhận phản hồi Gemini, tiến hành parse JSON.");
-        return this.safeJsonParse(text, originalContent);
-
-      } catch (err) {
-        console.warn(`⚠️ Lỗi model ${modelName}: ${err.message}`);
-
-        // === xử lý quá tải 429 ===
-        if (err.message.includes("429")) {
-          console.warn(`⏳ Đợi ${delay / 1000}s rồi thử lại...`);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          delay *= 2;
+          if (err.message.includes("429")) {
+            console.warn(`⏳ Đợi ${delay / 1000}s rồi thử lại...`);
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            delay *= 2;
+          }
         }
       }
     }
+
+    console.error("🚫 Hết lượt thử model — chuyển sang fallback offline.");
+    return this.fallbackAnalysis(originalContent);
   }
 
-  console.error("🚫 Hết lượt thử model — chuyển sang fallback offline.");
-  return this.fallbackAnalysis(originalContent);
-}
-
-
   // ========================
-  // 🧩 Parse JSON an toàn
+  // 🧩 Parse JSON an toàn + ưu tiên THREAT
   // ========================
   safeJsonParse(text, originalContent) {
     try {
@@ -392,25 +306,21 @@ async retryGeminiRequest(prompt, originalContent, retries = 3, delay = 3000) {
         parsed.behaviorFlags = [];
       }
 
+      // Phân tích domain
+      const domainTrust = this.getDomainTrust(originalContent);
+
+      // Nếu không có analysis → tạo skeleton
       if (!parsed.analysis || typeof parsed.analysis !== "object") {
-        const domainTrust = this.getDomainTrust(originalContent);
-        parsed.analysis = {
-          scamAnalysis: "",
-          manipulationAnalysis: "",
-          threatAnalysis: "",
-          contextAnalysis: "",
-          technicalIndicators: "",
-          professionalFraudAnalysis: "",
-          domainTrust,
-          summary: "Không có phân tích chi tiết từ AI, đã gán mặc định."
-        };
-      } else {
-        // Đảm bảo có domainTrust trong analysis
-        if (!parsed.analysis.domainTrust) {
-          parsed.analysis.domainTrust = this.getDomainTrust(originalContent);
-        }
+        parsed.analysis = parsed.analysis || {};
+parsed.analysis.domainTrust = domainTrust;
+parsed.analysis.extractedThreats = this.extractThreatSentences(originalContent);
+parsed.analysis.summary = parsed.analysis.summary || "Phân tích AI tóm tắt nội dung.";
+
+      } else if (!parsed.analysis.domainTrust) {
+        parsed.analysis.domainTrust = domainTrust;
       }
 
+      // Nếu không có recommendations → sinh mặc định
       if (!Array.isArray(parsed.recommendations)) {
         parsed.recommendations = parsed.isPhishing
           ? [
@@ -420,10 +330,42 @@ async retryGeminiRequest(prompt, originalContent, retries = 3, delay = 3000) {
             ]
           : ["Email có vẻ an toàn, nhưng vẫn nên cảnh giác trước khi tương tác."];
       }
+
       if (!parsed.explanation) {
         parsed.explanation = parsed.isPhishing
           ? "Email có nhiều dấu hiệu lừa đảo hoặc không an toàn."
           : "Không phát hiện dấu hiệu lừa đảo rõ ràng.";
+      }
+
+      // ================================
+      // 🚨 ƯU TIÊN EMAIL ĐE DỌA
+      // ================================
+      const threatSentences = this.extractThreatSentences(originalContent || "");
+      if (threatSentences.length > 0) {
+        // Ép CRITICAL cho mọi email có câu đe dọa
+        parsed.riskLevel = "CRITICAL";
+        parsed.score = Math.max(parsed.score || 0, 95);
+        parsed.confidence = Math.max(parsed.confidence || 0, parsed.score);
+        parsed.isPhishing = true;
+
+        if (!parsed.type.includes("THREAT")) {
+          parsed.type.push("THREAT");
+        }
+
+        parsed.recommendations = this.buildRecommendations(
+          true,
+          parsed.riskLevel,
+          domainTrust,
+          threatSentences
+        );
+
+        parsed.explanation =
+          `Email chứa lời đe dọa trực tiếp: "${threatSentences[0]}". ` +
+          "Đây là hành vi nguy hiểm nghiêm trọng, người nhận tuyệt đối không được tương tác.";
+
+        if (!parsed.analysis.extractedThreats) {
+          parsed.analysis.extractedThreats = threatSentences;
+        }
       }
 
       return parsed;
@@ -434,102 +376,58 @@ async retryGeminiRequest(prompt, originalContent, retries = 3, delay = 3000) {
   }
 
   // ========================
+  // 🔍 TRÍCH XUẤT CÂU ĐE DỌA TRỰC TIẾP
   // ========================
-// ⚙️ FALLBACK OFFLINE NÂNG CAO (FULL VERSION)
-// ========================
+  extractThreatSentences(content) {
+    if (!content) return [];
+    const threatPatterns = [
+      /(bố mày[^\.!\?]*giết[^\.!\?]*)/gi,
+      /(giết[^\.!\?]*)/gi,
+      /(chết[^\.!\?]*)/gi,
+      /(tao[^\.!\?]*?(xử|đâm|tìm|giết)[^\.!\?]*)/gi,
+      /(mày[^\.!\?]*?(giết|chết)[^\.!\?]*)/gi,
+      /(sẽ[^\.!\?]*(giết|đâm|xử)[^\.!\?]*)/gi,
+      /(kill[^\.!\?]*)/gi,
+      /(murder[^\.!\?]*)/gi,
+      /(i will find you[^\.!\?]*)/gi
+    ];
 
-// ========================
-// 🔍 TRÍCH XUẤT CÂU ĐE DỌA TRỰC TIẾP
-// ========================
-extractThreatSentences(content) {
-  const threatPatterns = [
-    /(giết[^\.!\?]*)/gi,
-    /(chết[^\.!\?]*)/gi,
-    /(tao[^\.!\?]*?(xử|đâm|tìm|giết)[^\.!\?]*)/gi,
-    /(mày[^\.!\?]*?(giết|chết)[^\.!\?]*)/gi,
-    /(sẽ[^\.!\?]*(giết|đâm|xử)[^\.!\?]*)/gi,
-    /(kill[^\.!\?]*)/gi,
-    /(murder[^\.!\?]*)/gi,
-    /(i will find you[^\.!\?]*)/gi
-  ];
+    const matches = [];
 
-  const matches = [];
+    for (const pattern of threatPatterns) {
+      const found = content.match(pattern);
+      if (found) matches.push(...found);
+    }
 
-  for (const pattern of threatPatterns) {
-    const found = content.match(pattern);
-    if (found) matches.push(...found);
+    return matches.map(s => s.trim());
   }
 
-  return matches;
-}
-
+  // ========================
+  // ⚙️ FALLBACK OFFLINE NÂNG CAO
+  // ========================
 fallbackAnalysis(emailContent) {
   const original = emailContent || "";
   const lower = original.toLowerCase();
 
-  // Rule + Behavior
   const rulesMatched = this.advancedRules(lower);
-  const threatSentences = this.extractThreatSentences(original);
   const behaviorFlags = this.behaviorCheck(lower);
   const domainTrust = this.getDomainTrust(original);
 
-  // Tính điểm ban đầu
   let riskScore = this.calculateRiskScore(lower, rulesMatched, behaviorFlags, domainTrust);
-  if (threatSentences.length > 0) {
-  riskScore = Math.max(riskScore, 95);
-}
 
-  
-
-  // ================================
-  // 🚨 1. ƯU TIÊN THREAT / PHISHING
-  // ================================
-  const dangerKeywords = [
-    "giết", "xử", "đâm", "tao tìm mày", "cho mày chết", "đe dọa", "dọa giết",
-    "kill", "murder", "threat",
-    "password", "otp", "mật khẩu", "link đăng nhập", "xác minh tài khoản",
-    "verify account"
-  ];
-
-  const hasDanger = dangerKeywords.some((w) => lower.includes(w));
+  const threatSentences = this.extractThreatSentences(original);
   const hasThreatRule = rulesMatched.some(r => r.startsWith("threat:"));
 
-  // Nếu phát hiện threat → ép điểm tối thiểu 80 (HIGH)
-  if (hasDanger || hasThreatRule) {
-    riskScore = Math.max(riskScore, 80);
+  // Nếu có lời đe dọa mạnh → ƯU TIÊN CRITICAL
+  if (threatSentences.length > 0 || hasThreatRule) {
+    riskScore = 95;
   }
 
-  // ================================
-  // ✔ 2. GIẢM MỨC CẢNH BÁO VỚI EMAIL QUẢNG CÁO
-  // ================================
-  const promoKeywords = ["khuyến mãi", "giảm giá", "ưu đãi", "deal", "sale", "voucher", "promotion"];
-  const isPromo = promoKeywords.some(k => lower.includes(k));
-
-  // Nếu là quảng cáo hợp lệ (không chứa threat + phishing) → không cho lên HIGH
-  if (
-    isPromo &&
-    !hasDanger &&
-    !hasThreatRule &&
-    !rulesMatched.some(r => r.startsWith("scam:")) &&
-    !rulesMatched.some(r => r.startsWith("technical:"))
-  ) {
-    riskScore = Math.min(riskScore, 30); // LOW–MEDIUM
-  }
-
-  // ================================
-  // 3. Xác định mức độ nguy hiểm
-  // ================================
   const isPhishing = riskScore >= 50;
   const riskLevel = this.getRiskLevelFromRiskScore(riskScore);
 
-  // ================================
-  // 4. SUY LUẬN TYPE
-  // ================================
   const type = this.deriveTypes(rulesMatched, behaviorFlags, isPhishing);
 
-  // ================================
-  // 5. Dữ liệu mô tả phân tích
-  // ================================
   const {
     scamAnalysis,
     manipulationAnalysis,
@@ -548,36 +446,35 @@ fallbackAnalysis(emailContent) {
     isPhishing
   );
 
-  // ================================
-  // 6. Khuyến nghị xử lý
-  // ================================
-  const recommendations = this.buildRecommendations(isPhishing, riskLevel, domainTrust);
+  const recommendations = this.buildRecommendations(
+    isPhishing,
+    riskLevel,
+    domainTrust,
+    threatSentences
+  );
 
-  // ================================
-  // 7. Explanation đơn giản
-  // ================================
-      let explanation = "";
-
-    if (threatSentences.length) {
-      explanation =
-        `Email chứa lời đe dọa trực tiếp: "${threatSentences[0]}". ` +
-        "Đây là hành vi nguy hiểm nghiêm trọng, người nhận tuyệt đối không được tương tác.";
-    } else if (isPhishing) {
-      explanation = "Email có dấu hiệu lừa đảo rõ ràng, người dùng cần thận trọng.";
-    } else {
-      explanation = "Không phát hiện dấu hiệu nguy hiểm rõ rệt.";
-    }
-
-  // ================================
-  // 8. Trả về object kết quả
-  // ================================
   return {
+    criteria: {
+      sender: { status: domainTrust === "TRUSTED" ? "safe" : "warning", reason: "Đánh giá bởi offline engine" },
+      subject: { status: "safe", reason: "Không đủ dữ liệu để phân tích" },
+      urgent: { status: behaviorFlags.includes("high_urgency") ? "warning" : "safe", reason: "Từ khóa khẩn cấp" },
+      sensitiveInfo: { status: rulesMatched.some(r => r.includes("sensitive")) ? "warning" : "safe", reason: "" },
+      links: { status: rulesMatched.some(r => r.startsWith("technical")) ? "warning" : "safe", reason: "" },
+      attachments: { status: "safe", reason: "" },
+      grammar: { status: "safe", reason: "" },
+      infoMismatch: { status: "safe", reason: "" },
+      serverIP: { status: domainTrust === "UNTRUSTED" ? "warning" : "safe", reason: "" },
+      phishingPattern: { status: rulesMatched.length > 0 ? "warning" : "safe", reason: "" }
+    },
+
+    score: riskScore,
+    riskLevel,
     isPhishing,
     confidence: riskScore,
-    riskLevel,
     type,
     rulesMatched,
     behaviorFlags,
+
     analysis: {
       scamAnalysis,
       manipulationAnalysis,
@@ -587,12 +484,11 @@ fallbackAnalysis(emailContent) {
       professionalFraudAnalysis,
       domainTrust,
       summary,
-      extractedThreats: threatSentences.length ? threatSentences : []
-      
+      extractedThreats: threatSentences
     },
-    
+
     recommendations,
-    explanation
+    explanation: summary
   };
 }
 
@@ -614,35 +510,29 @@ fallbackAnalysis(emailContent) {
         },
         {
           name: "sensitive_request",
-          regex:
-            /(mật khẩu|password|otp|mã otp|tài khoản ngân hàng|số thẻ|cvv|pin)/i
+          regex: /(mật khẩu|password|otp|mã otp|tài khoản ngân hàng|số thẻ|cvv|pin)/i
         },
         {
           name: "unusual_payment",
-          regex:
-            /(chuyển khoản (momo|zalo|ví điện tử)|stk cá nhân|tài khoản cá nhân)/i
+          regex: /(chuyển khoản (momo|zalo|ví điện tử)|stk cá nhân|tài khoản cá nhân)/i
         }
       ],
       psychological: [
         {
           name: "flattery_trap",
-          regex:
-            /(rất tiềm năng|hoàn hảo|xuất sắc|chỉ riêng bạn|bạn được chọn)/i
+          regex: /(rất tiềm năng|hoàn hảo|xuất sắc|chỉ riêng bạn|bạn được chọn)/i
         },
         {
           name: "fear_trigger",
-          regex:
-            /(khóa tài khoản|đình chỉ|đuổi học|phạt tiền|mất quyền truy cập)/i
+          regex: /(khóa tài khoản|đình chỉ|đuổi học|phạt tiền|mất quyền truy cập)/i
         },
         {
           name: "scarcity_tactic",
-          regex:
-            /(chỉ hôm nay|cơ hội cuối|lần duy nhất|thời gian có hạn)/i
+          regex: /(chỉ hôm nay|cơ hội cuối|lần duy nhất|thời gian có hạn)/i
         },
         {
           name: "emotional_story",
-          regex:
-            /(hoàn cảnh khó khăn|câu chuyện cảm động|tôi đang gặp rắc rối lớn)/i
+          regex: /(hoàn cảnh khó khăn|câu chuyện cảm động|tôi đang gặp rắc rối lớn)/i
         }
       ],
       context: [
@@ -656,24 +546,21 @@ fallbackAnalysis(emailContent) {
         },
         {
           name: "unexpected_important_request",
-          regex:
-            /(việc rất quan trọng|cực kỳ quan trọng|bảo mật tuyệt đối)/i
+          regex: /(việc rất quan trọng|cực kỳ quan trọng|bảo mật tuyệt đối)/i
         }
       ],
       technical: [
         { name: "shortened_url", regex: /(bit\.ly|tinyurl\.com|is\.gd|goo\.gl)/i },
         {
           name: "suspicious_link",
-          regex:
-            /(http:\/\/|https?:\/\/[^\s]*\.(xyz|top|click|shop|online|icu))/i
+          regex: /(http:\/\/|https?:\/\/[^\s]*\.(xyz|top|click|shop|online|icu))/i
         },
         { name: "login_like", regex: /(đăng nhập|login).*https?:\/\//i }
       ],
       threat: [
         {
           name: "explicit_threat",
-          regex:
-            /(sẽ tìm đến bạn|sẽ xử lý bạn|sẽ hối hận|hủy hoại danh tiếng)/i
+          regex: /(giết|cho mày chết|tao tìm mày|tao giết|đâm mày|xử mày|dọa giết)/i
         },
         {
           name: "extortion",
@@ -710,6 +597,7 @@ fallbackAnalysis(emailContent) {
     if (/tôi là giám đốc|tôi là trưởng phòng|tôi đại diện/i.test(content)) {
       flags.push("self_claimed_authority");
     }
+
     if (/không được chia sẻ với ai|giữ bí mật/i.test(content)) {
       flags.push("secrecy_request");
     }
@@ -751,13 +639,15 @@ fallbackAnalysis(emailContent) {
       if (lowerContent.includes(k)) score += v;
     });
 
-    // Domain TRUSTED → giảm nguy cơ một chút
+    // Domain TRUSTED → chỉ giảm nếu không có rule nguy hiểm
     if (domainTrust === "TRUSTED") {
-    const isDangerous = rulesMatched.some((r) => r.startsWith("threat:")) ||
-                        rulesMatched.some((r) => r.startsWith("scam:")) ||
-                        rulesMatched.some((r) => r.startsWith("technical:"));
-    if (!isDangerous) score -= 10;
-}
+      const isDangerous =
+        rulesMatched.some((r) => r.startsWith("threat:")) ||
+        rulesMatched.some((r) => r.startsWith("scam:")) ||
+        rulesMatched.some((r) => r.startsWith("technical:"));
+      if (!isDangerous) score -= 10;
+    }
+
     if (domainTrust === "UNTRUSTED" || domainTrust === "SUSPICIOUS") score += 10;
 
     // Mỗi rule offline trúng → tăng nguy cơ
@@ -770,7 +660,6 @@ fallbackAnalysis(emailContent) {
     score = Math.max(0, Math.min(100, score));
     return score;
   }
-  
 
   // ========================
   // 🧮 RiskLevel từ riskScore
@@ -783,47 +672,38 @@ fallbackAnalysis(emailContent) {
   }
 
   // ========================
+  // 🏷️ SUY LUẬN TYPE TỪ RULES
   // ========================
-// 🏷️ SUY LUẬN TYPE TỪ RULES (VERSION OPTIMIZED)
-// ========================
-deriveTypes(rulesMatched, behaviorFlags, isPhishing) {
-  const types = new Set();
+  deriveTypes(rulesMatched, behaviorFlags, isPhishing) {
+    const types = new Set();
 
-  // Không có dấu hiệu → SAFE
-  if (!isPhishing && rulesMatched.length === 0) {
-    types.add("SAFE");
-  } 
-  else {
-    // Map rules → types
-    rulesMatched.forEach((r) => {
-      const [group] = r.split(":");
+    if (!isPhishing && rulesMatched.length === 0) {
+      types.add("SAFE");
+    } else {
+      rulesMatched.forEach((r) => {
+        const [group] = r.split(":");
+        if (group === "scam") types.add("SCAM");
+        if (group === "technical") types.add("PHISHING");
+        if (group === "psychological") types.add("MANIPULATION");
+        if (group === "threat") types.add("THREAT");
+      });
 
-      if (group === "scam") types.add("SCAM");
-      if (group === "technical") types.add("PHISHING");
-      if (group === "psychological") types.add("MANIPULATION");
-      if (group === "threat") types.add("THREAT");
-    });
-
-    // Mạo danh quyền lực
-    if (behaviorFlags.includes("self_claimed_authority")) {
-      types.add("IMPERSONATION");
+      if (behaviorFlags.includes("self_claimed_authority")) {
+        types.add("IMPERSONATION");
+      }
     }
+
+    if (types.size === 0) {
+      types.add(isPhishing ? "SCAM" : "SAFE");
+    }
+
+    // Ưu tiên THREAT nếu có rule threat
+    if (rulesMatched.some((r) => r.startsWith("threat:"))) {
+      types.add("THREAT");
+    }
+
+    return Array.from(types);
   }
-
-  // Nếu hệ thống chưa phân loại → fallback mặc định
-  if (types.size === 0) {
-    types.add(isPhishing ? "SCAM" : "SAFE");
-  }
-
-  // ⚠️ ƯU TIÊN ĐE DỌA: nếu có bất kỳ rule threat nào → CHẮC CHẮN là THREAT
-  if (rulesMatched.some(r => r.startsWith("threat:"))) {
-    types.add("THREAT");
-  }
-
-  return Array.from(types);
-}
-
-  
 
   // ========================
   // 📝 SINH NỘI DUNG PHÂN TÍCH OFFLINE
@@ -884,7 +764,7 @@ deriveTypes(rulesMatched, behaviorFlags, isPhishing) {
 
     const riskText =
       riskScore >= 75
-      ? "Mức nguy cơ rất cao, khuyến nghị xem là email nguy hiểm."
+        ? "Mức nguy cơ rất cao, khuyến nghị xem là email nguy hiểm."
         : riskScore >= 50
         ? "Mức nguy cơ cao, nên xử lý email này với độ cảnh giác lớn."
         : riskScore >= 25
@@ -907,18 +787,31 @@ deriveTypes(rulesMatched, behaviorFlags, isPhishing) {
   }
 
   // ========================
-  // ✅ KHUYẾN NGHỊ OFFLINE
+  // ✅ KHUYẾN NGHỊ BẢO MẬT
   // ========================
-  buildRecommendations(isPhishing, riskLevel, domainTrust) {
-   if (riskLevel === "CRITICAL") {
-  return [
-    "⚠️ Email chứa nội dung đe dọa nghiêm trọng.",
-    "❌ **XÓA EMAIL NGAY LẬP TỨC!**",
-    "🚫 Không trả lời email này hoặc tương tác với người gửi.",
-    "📢 Báo cáo ngay cho cơ quan chức năng có thẩm quyền."
-  ];
+  buildRecommendations(isPhishing, riskLevel, domainTrust, threatSentences = []) {
+    // Ưu tiên email có lời đe dọa trực tiếp hoặc CRITICAL
+    if (threatSentences.length > 0 || riskLevel === "CRITICAL") {
+      return [
+        "❌ **XÓA EMAIL NGAY LẬP TỨC – KHÔNG ĐƯỢC GIỮ LẠI!**",
+        "🚫 **Không trả lời hoặc tương tác với người gửi.**",
+        threatSentences.length
+          ? `⚠️ Email chứa lời đe dọa trực tiếp: "${threatSentences[0]}".`
+          : "⚠️ Email có nội dung đe dọa nghiêm trọng.",
+        "📢 **Báo cáo ngay cho cơ quan chức năng có thẩm quyền để xử lý.**",
+        "🔒 Giữ an toàn cá nhân và cảnh giác với mọi liên hệ khác từ người này."
+      ];
+    }
 
-}
+    if (isPhishing && riskLevel === "HIGH") {
+      return [
+        "⚠️ Email có nhiều dấu hiệu lừa đảo.",
+        "❌ Không nhấp vào bất kỳ liên kết hoặc nút nào trong email.",
+        "❌ Không tải xuống hoặc mở file đính kèm nếu chưa chắc chắn.",
+        "❌ Không cung cấp bất kỳ thông tin cá nhân, mật khẩu, OTP hoặc thông tin tài chính.",
+        "📢 Báo cáo email này cho bộ phận IT hoặc người phụ trách an ninh thông tin."
+      ];
+    }
 
     if (riskLevel === "MEDIUM" || domainTrust === "SUSPICIOUS") {
       return [
@@ -975,7 +868,7 @@ deriveTypes(rulesMatched, behaviorFlags, isPhishing) {
   }
 
   getDomainTrust(content) {
-    const emails = this.extractEmails(content);
+    const emails = this.extractEmails(content || "");
     if (!emails.length) return "UNKNOWN";
 
     const trustedDomains = this.getTrustedDomains();
@@ -998,7 +891,8 @@ deriveTypes(rulesMatched, behaviorFlags, isPhishing) {
       "http://",
       "bit.ly"
     ];
-    return signals.some((s) => content.toLowerCase().includes(s));
+    const lower = content.toLowerCase();
+    return signals.some((s) => lower.includes(s));
   }
 }
 
