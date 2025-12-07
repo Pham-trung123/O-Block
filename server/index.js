@@ -16,8 +16,8 @@ import facebookLoginRouter from "./auth/facebookLogin.js";
 import githubLoginRouter from "./auth/githubLogin.js";
 import linkedinLoginRouter from "./auth/linkedinLogin.js";
 import axios from "axios";
-import adminRouter from "./routes/adminRoutes.js";import { sendEmailOTP } from "./services/mail.js";
-import { sendSMSOTP } from "./services/sms.js";
+import adminRouter from "./routes/adminRoutes.js";
+
 
 
 
