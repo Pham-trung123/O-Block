@@ -57,7 +57,7 @@ export default function Login({ isPopup }) {
       const response = await fetch("http://localhost:3000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, captchaToken }),
+      body: JSON.stringify({  email, password, captchaToken }),
         credentials: "include",
       });
 

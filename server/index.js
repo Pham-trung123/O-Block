@@ -16,10 +16,6 @@ import facebookLoginRouter from "./auth/facebookLogin.js";
 import githubLoginRouter from "./auth/githubLogin.js";
 import linkedinLoginRouter from "./auth/linkedinLogin.js";
 import axios from "axios";
-import adminRouter from "./routes/adminRoutes.js";
-
-
-
 
 // ========================
 // ENV + PATH
@@ -27,8 +23,6 @@ import adminRouter from "./routes/adminRoutes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, ".env") });
-
-
 
 const app = express();
 
@@ -108,7 +102,6 @@ async function sendMail(to, subject, html) {
     console.error("❌ Lỗi sendMail():", err);
   }
 }
-
 // =========================
 // 📊 API DASHBOARD
 // =========================
@@ -116,16 +109,19 @@ app.get("/api/dashboard/stats", async (req, res) => {
   try {
     const pool = await getPool();
 
+    // 1. Tổng số email đã phân tích
     const totalResult = await pool.request().query(`
       SELECT COUNT(*) AS total FROM email_analysis
     `);
 
+    // 2. Phân bố risk_level
     const riskResult = await pool.request().query(`
       SELECT risk_level, COUNT(*) AS total
       FROM email_analysis
       GROUP BY risk_level
     `);
 
+    // 3. Xu hướng theo ngày
     const trendResult = await pool.request().query(`
       SELECT 
         CONVERT(date, analysis_date) AS [date],
@@ -150,31 +146,23 @@ app.get("/api/dashboard/stats", async (req, res) => {
 });
 
 // ========================
-// REGISTER (CÓ SỐ ĐIỆN THOẠI)
+// REGISTER
 // ========================
 app.post("/api/register", async (req, res) => {
   try {
-    const { fullname, email, phone, password } = req.body;
+    const { fullname, email, password } = req.body;
 
-    if (!fullname || !email || !phone || !password)
+    if (!fullname || !email || !password)
       return res.json({ success: false, message: "Thiếu dữ liệu!" });
 
-    if (!/^[0-9]{9,11}$/.test(phone))
-      return res.json({ success: false, message: "Số điện thoại không hợp lệ!" });
-
     const pool = await getPool();
-
     const check = await pool
       .request()
       .input("email", sql.VarChar, email)
-      .input("phone", sql.VarChar, phone)
-      .query(`
-        SELECT * FROM users 
-        WHERE email = @email OR phone = @phone
-      `);
+      .query("SELECT * FROM users WHERE email = @email");
 
     if (check.recordset.length > 0)
-      return res.json({ success: false, message: "Email hoặc số điện thoại đã tồn tại!" });
+      return res.json({ success: false, message: "Email đã tồn tại!" });
 
     const hashed = await bcrypt.hash(password, 10);
 
@@ -182,11 +170,10 @@ app.post("/api/register", async (req, res) => {
       .request()
       .input("username", sql.VarChar, fullname)
       .input("email", sql.VarChar, email)
-      .input("phone", sql.VarChar, phone)
       .input("password", sql.VarChar, hashed)
       .query(`
-        INSERT INTO users (username, email, phone, password, role, is_active, created_at, updated_at)
-        VALUES (@username, @email, @phone, @password, 'user', 1, GETDATE(), GETDATE())
+        INSERT INTO users (username, email, password, role, is_active, created_at, updated_at)
+        VALUES (@username, @email, @password, 'user', 1, GETDATE(), GETDATE())
       `);
 
     res.json({ success: true, message: "Đăng ký thành công!" });
@@ -197,11 +184,11 @@ app.post("/api/register", async (req, res) => {
 });
 
 // ========================
-// LOGIN (EMAIL HOẶC SỐ ĐIỆN THOẠI)
+// LOGIN + VERIFY reCAPTCHA
 // ========================
 app.post("/api/login", async (req, res) => {
   try {
-    const { identifier, password, captchaToken } = req.body;
+    const { email, password, captchaToken } = req.body;
 
     if (!captchaToken)
       return res.json({
@@ -225,17 +212,13 @@ app.post("/api/login", async (req, res) => {
       });
 
     const pool = await getPool();
-
     const result = await pool
       .request()
-      .input("identifier", sql.VarChar, identifier)
-      .query(`
-        SELECT * FROM users 
-        WHERE email = @identifier OR phone = @identifier
-      `);
+      .input("email", sql.VarChar, email)
+      .query("SELECT * FROM users WHERE email = @email");
 
     if (result.recordset.length === 0)
-      return res.json({ success: false, message: "Tài khoản không tồn tại!" });
+      return res.json({ success: false, message: "Email không tồn tại!" });
 
     const user = result.recordset[0];
 
@@ -243,9 +226,13 @@ app.post("/api/login", async (req, res) => {
     if (hash.startsWith("$2y$")) hash = "$2a$" + hash.substring(4);
 
     const valid = await bcrypt.compare(password, hash);
-    if (!valid) return res.json({ success: false, message: "❌ Mật khẩu sai!" });
+    if (!valid)
+      return res.json({ success: false, message: "❌ Mật khẩu sai!" });
 
-    req.session.user = { id: user.id, role: user.role };
+    // =======================
+    // GIỮ NGUYÊN — CHỈ THÊM ROLE
+    // =======================
+    req.session.user = { id: user.id, role: user.role, email: user.email };
 
     res.json({
       success: true,
@@ -253,8 +240,7 @@ app.post("/api/login", async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        phone: user.phone,
-        role: user.role,
+        role: user.role, // THÊM ROLE ĐỂ ADMIN DASHBOARD HOẠT ĐỘNG
       },
     });
   } catch (error) {
@@ -266,80 +252,6 @@ app.post("/api/login", async (req, res) => {
 // ========================
 // REQUEST OTP
 // ========================
-app.post("/api/request-otp", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const pool = await getPool();
-    const user = await pool
-      .request()
-      .input("email", sql.VarChar, email)
-      .query("SELECT id FROM users WHERE email = @email");
-
-    if (user.recordset.length === 0)
-      return res.json({ success: false, message: "Email không tồn tại!" });
-
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    req.session.otp = otp;
-    req.session.email = email;
-
-    await sendMail(
-      email,
-      "🔐 Mã OTP Phish Hunters",
-      `<p>Mã OTP của bạn: <b>${otp}</b> (hiệu lực 10 phút)</p>`
-    );
-
-    res.json({ success: true, message: "OTP đã gửi!" });
-  } catch (err) {
-    console.error("❌ Lỗi OTP:", err);
-    res.status(500).json({ success: false });
-  }
-});
-
-// ========================
-// VERIFY OTP
-// ========================
-app.post("/api/verify-otp", (req, res) => {
-  const { email, code } = req.body;
-
-  if (!req.session.otp || req.session.email !== email)
-    return res.json({
-      success: false,
-      message: "OTP đã hết hạn hoặc không hợp lệ!",
-    });
-
-  if (req.session.otp !== code)
-    return res.json({ success: false, message: "Mã OTP không chính xác!" });
-
-  const token = crypto.randomBytes(16).toString("hex");
-  req.session.resetToken = token;
-
-  res.json({ success: true, token });
-});
-
-// ========================
-// RESET PASSWORD
-// ========================
-app.post("/api/reset-password", async (req, res) => {
-  const { token, newPassword } = req.body;
-
-  if (!req.session.resetToken || req.session.resetToken !== token)
-    return res.json({
-      success: false,
-      message: "Token không hợp lệ!",
-    });
-
-  const hashed = await bcrypt.hash(newPassword, 10);
-
-  const pool = await getPool();
-  await pool
-    .request()
-    .input("email", sql.VarChar, req.session.email)
-    .input("password", sql.VarChar, hashed)
-    .query("UPDATE users SET password = @password WHERE email = @email");
-
-  res.json({ success: true, message: "Đổi mật khẩu thành công!" });
-});
 
 // ========================
 // AI ANALYZE EMAIL
@@ -424,115 +336,9 @@ app.use("/auth/facebook", facebookLoginRouter);
 // ========================
 // Admin Route
 // ========================
+import adminRouter from "./routes/adminRoutes.js";
+
 app.use("/api/admin", adminRouter);
-
-//========================
-// Email && SMS
-//==========================
-app.post("/api/request-otp", async (req, res) => {
-  try {
-    const { email, phone, method } = req.body;
-
-    if (!email && !phone)
-      return res.json({ success: false, message: "Thiếu thông tin tài khoản!" });
-
-    // Tạo mã OTP 4 số
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-
-    // Lưu vào DB và set expired sau 5 phút
-    const pool = await getPool();
-    await pool
-      .request()
-      .input("email", sql.VarChar, email)
-      .input("otp_code", sql.VarChar, otp)
-      .input("expires_at", sql.DateTime, new Date(Date.now() + 5 * 60000))
-      .query(`
-        INSERT INTO otp_tokens (email, otp_code, expires_at)
-        VALUES (@email, @otp_code, @expires_at)
-      `);
-
-    // =======================================
-    // Gửi OTP đúng theo lựa chọn
-    // =======================================
-    if (method === "sms") {
-      if (!phone) return res.json({ success: false, message: "Bạn chưa có số điện thoại!" });
-      await sendSMSOTP(phone, otp);
-    } else {
-      await sendEmailOTP(email, otp);
-    }
-
-    return res.json({ success: true });
-  } catch (err) {
-    console.error("Lỗi gửi OTP:", err);
-    res.json({ success: false, message: "Không thể gửi mã OTP." });
-  }
-});
-
-app.post("/api/verify-otp", async (req, res) => {
-  try {
-    const { email, code } = req.body;
-
-    const pool = await getPool();
-    const otpData = await pool
-      .request()
-      .input("email", sql.VarChar, email)
-      .input("otp_code", sql.VarChar, code)
-      .query(`
-        SELECT * FROM otp_tokens
-        WHERE email = @email AND otp_code = @otp_code AND used = 0
-      `);
-
-    if (otpData.recordset.length === 0)
-      return res.json({ success: false, message: "Mã OTP không hợp lệ!" });
-
-    const otpRow = otpData.recordset[0];
-
-    if (new Date() > new Date(otpRow.expires_at))
-      return res.json({ success: false, message: "Mã OTP đã hết hạn!" });
-
-    // Tạo token tạm cho reset password
-    const tempToken = crypto.randomBytes(24).toString("hex");
-
-    await pool
-      .request()
-      .input("id", sql.Int, otpRow.id)
-      .query(`UPDATE otp_tokens SET used = 1 WHERE id = @id`);
-
-    return res.json({ success: true, token: tempToken });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, message: "Lỗi xác minh OTP." });
-  }
-});
-
-app.post("/api/reset-password", async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-    if (!token) return res.json({ success: false, message: "Thiếu token!" });
-
-    const email = req.session.email; // hoặc lưu email theo cách bạn muốn
-
-    if (!email)
-      return res.json({ success: false, message: "Token không hợp lệ!" });
-
-    const hashed = bcrypt.hashSync(newPassword, 10);
-
-    const pool = await getPool();
-    await pool
-      .request()
-      .input("email", sql.VarChar, email)
-      .input("pw", sql.VarChar, hashed)
-      .query(`
-        UPDATE users SET password = @pw WHERE email = @email
-      `);
-
-    return res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    return res.json({ success: false, message: "Không thể đổi mật khẩu." });
-  }
-});
-
 
 // ========================
 // START SERVER
@@ -542,4 +348,5 @@ app.listen(PORT, () =>
   console.log(`🚀 Server chạy tại http://localhost:${PORT}`)
 );
 
+// ⭐⭐⭐⭐⭐ THÊM DÒNG NÀY — KHÔNG SỬA CODE CŨ ⭐⭐⭐⭐⭐
 export { getPool };
