@@ -180,7 +180,12 @@ export default function EmailAnalyzer() {
         await saveAnalysis(id, content, data.result);
 
         // mở UI sau khi phân tích
-        setIsOpen((prev) => ({ ...prev, [id]: true }));
+      
+          setIsOpen((prev) => ({
+            ...prev,
+            [id]: true,
+          }));
+
       } else {
         setError("Phân tích thất bại.");
       }
@@ -782,6 +787,7 @@ export default function EmailAnalyzer() {
                           [email.id]: true,
                         }))
                       }
+
                       className="mt-3 text-sm text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-2 transition-colors group"
                       whileHover={{ x: 5 }}
                     >
