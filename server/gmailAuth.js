@@ -3,9 +3,16 @@
   import { google } from "googleapis";
   import dotenv from "dotenv";
   import path from "path";
+  import { saveEmailHistory } from "./services/historyService.js";
+  import { geminiAnalyzer } from "./services/geminiService.js";
+
+
+
 
   dotenv.config({ path: path.join(process.cwd(), "server/.env") });
   const router = express.Router();
+
+
 
   // =============================
   // ⚙️ Cấu hình OAuth2 Client
@@ -347,5 +354,37 @@
       redirect_uri: process.env.GOOGLE_REDIRECT_URI,
     });
   });
+  // =============================
+// 📌 API phân tích + lưu lịch sử Gmail
+// =============================
+router.post("/analyze-gmail", async (req, res) => {
+  try {
+    const { user_id, emailContent } = req.body;
+
+    if (!emailContent)
+      return res.json({ success: false, message: "Thiếu nội dung email!" });
+
+    if (!user_id)
+      return res.json({ success: false, message: "Thiếu user_id!" });
+
+    // 1️⃣ Phân tích bằng Gemini
+    const result = await geminiAnalyzer.analyzeEmail(emailContent);
+
+    // 2️⃣ Lưu lịch sử vào SQL
+    await saveEmailHistory(user_id, emailContent, result);
+
+    // 3️⃣ Trả dữ liệu cho frontend
+    return res.json({
+      success: true,
+      message: "Phân tích & lưu lịch sử thành công!",
+      result,
+    });
+
+  } catch (err) {
+    console.error("❌ Lỗi analyze-gmail:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 
   export default router;

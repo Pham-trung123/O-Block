@@ -16,6 +16,7 @@ import ZaloWidget from "./components/ZaloWidget";
 import MessengerWidget from "./components/MessengerWidget";
 import AdminDashboard from "./pages/AdminDashboard";
 import Dashboard from "./pages/Dashboard";
+import EmailHistory from "./pages/EmailHistory";
 
 
 
@@ -62,6 +63,8 @@ function AnimatedRoutes() {
           <Route path="/analyze" element={<EmailAnalyzer />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/history" element={<EmailHistory />} />
+
 
           {/* ⭐ ADMIN ĐÃ BẢO VỆ ROLE ⭐ */}
           <Route

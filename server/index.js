@@ -17,6 +17,8 @@ import githubLoginRouter from "./auth/githubLogin.js";
 import linkedinLoginRouter from "./auth/linkedinLogin.js";
 import axios from "axios";
 import { sendWelcomeRegisterEmail, sendLoginSecurityEmail } from "./services/mailService.js";
+import { saveEmailHistory } from "./services/historyService.js";
+
 
 
 // ========================
@@ -65,7 +67,7 @@ app.use(
 // ========================
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=THANHPT09\\SQLEXPRESS03;Database=phisingemail;Trusted_Connection=Yes;",
+    "Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-8LLT5HQ\\MSSQLSERVER01;Database=phisingemail;Trusted_Connection=Yes;",
   options: { connectionTimeout: 5000 },
 };
 
@@ -382,12 +384,17 @@ app.post("/api/reset-password", async (req, res) => {
 // ========================
 app.post("/api/analyze", async (req, res) => {
   try {
-    const { emailContent } = req.body;
+    const { emailContent, userId } = req.body;
 
     if (!emailContent)
       return res.json({ success: false, message: "Thiếu nội dung email!" });
 
     const result = await geminiAnalyzer.analyzeEmail(emailContent);
+
+    // ⭐ LƯU LỊCH SỬ PHÂN TÍCH
+    if (userId) {
+      await saveEmailHistory(userId, emailContent, result);
+    }
 
     res.json({ success: true, result });
   } catch (err) {
@@ -395,6 +402,7 @@ app.post("/api/analyze", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
 
 // ========================
 // SAVE AI RESULT
@@ -428,17 +436,22 @@ app.post("/api/save-analysis", async (req, res) => {
       .input("risk_level", sql.NVarChar(50), risk_level)
       .input("threat_score", sql.Int, threat_score)
       .input("recommendation", sql.NVarChar(sql.MAX), recommendation)
+      .input("details_json", sql.NVarChar(sql.MAX), JSON.stringify(raw_result))
+
       .query(`
-        INSERT INTO email_analysis (
-          user_id, email_content, sender_analysis,
-          content_analysis, link_analysis, risk_level,
-          threat_score, recommendation, analysis_date
-        )
-        VALUES (
-          @user_id, @email_content, @sender_analysis,
-          @content_analysis, @link_analysis, @risk_level,
-          @threat_score, @recommendation, GETDATE()
-        )
+                  INSERT INTO email_analysis (
+            user_id, email_content, sender_analysis,
+            content_analysis, link_analysis, risk_level,
+            threat_score, recommendation, analysis_date,
+            details_json
+          )
+          VALUES (
+            @user_id, @email_content, @sender_analysis,
+            @content_analysis, @link_analysis, @risk_level,
+            @threat_score, @recommendation, GETDATE(),
+            @details_json
+          )
+
       `);
 
     res.json({ success: true, message: "Lưu thành công!" });
@@ -447,6 +460,61 @@ app.post("/api/save-analysis", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+// ========================
+// GET HISTORY LIST
+// ========================
+app.get("/api/history/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input("user_id", sql.Int, userId)
+      .query(`
+        SELECT 
+          id,
+          email_content,
+          risk_level,
+          threat_score,
+          analysis_date,
+          details_json
+        FROM email_analysis
+        WHERE user_id = @user_id
+        ORDER BY analysis_date DESC
+      `);
+
+    res.json({ success: true, history: result.recordset });
+  } catch (err) {
+    console.error("❌ Lỗi /api/history:", err.message);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ========================
+// GET HISTORY DETAIL
+// ========================
+app.get("/api/history/detail/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input("id", sql.Int, id)
+      .query(`
+        SELECT *
+        FROM email_analysis
+        WHERE id = @id
+      `);
+
+    res.json({ success: true, detail: result.recordset[0] });
+  } catch (err) {
+    console.error("❌ Lỗi /api/history/detail:", err.message);
+    res.status(500).json({ success: false });
+  }
+});
+
 
 // ========================
 // OAuth Routers

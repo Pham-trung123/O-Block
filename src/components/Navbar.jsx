@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation("navbar");
 
   const handleLogout = () => {
     logout();
@@ -43,21 +43,21 @@ export default function Navbar() {
               to="/dashboard"
               className="px-4 py-2 text-gray-600 hover:text-purple-600 font-medium rounded-lg hover:bg-purple-50 transition-all duration-200"
             >
-              {t("navbar.dashboard")}
+              {t("dashboard")}
             </Link>
 
             <Link
               to="/analyze"
               className="px-4 py-2 text-gray-600 hover:text-purple-600 font-medium rounded-lg hover:bg-purple-50 transition-all duration-200"
             >
-              {t("navbar.analyze")}
+              {t("analyze")}
             </Link>
 
             <Link
               to="/history"
               className="px-4 py-2 text-gray-600 hover:text-purple-600 font-medium rounded-lg hover:bg-purple-50 transition-all duration-200"
             >
-              {t("navbar.history")}
+              {t("history")}
             </Link>
           </div>
         )}
@@ -75,7 +75,7 @@ export default function Navbar() {
                     <p className="text-sm font-semibold text-gray-800">
                       {user.username}
                     </p>
-                    <p className="text-xs text-gray-500">{t("navbar.profile")}</p>
+                    <p className="text-xs text-gray-500">{t("profile")}</p>
                   </div>
                 </div>
                 <FiChevronDown className="text-gray-400 group-hover:text-purple-500 transition-transform group-hover:rotate-180 duration-200" />
@@ -97,7 +97,7 @@ export default function Navbar() {
                     className="flex items-center space-x-3 w-full px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded-lg transition-all duration-150"
                   >
                     <FiUser className="text-gray-400" />
-                    <span>{t("navbar.profile")}</span>
+                    <span>{t("profile")}</span>
                   </button>
 
                   {/* 🔥 Language Selector */}
@@ -137,7 +137,7 @@ export default function Navbar() {
                     className="flex items-center space-x-3 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-150"
                   >
                     <FiLogOut className="text-red-500" />
-                    <span>{t("navbar.logout")}</span>
+                    <span>{t("logout")}</span>
                   </button>
                 </div>
               </div>
@@ -148,14 +148,14 @@ export default function Navbar() {
                 to="/login"
                 className="px-5 py-2.5 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-all duration-200 border border-transparent hover:border-gray-300"
               >
-                {t("navbar.login")}
+                {t("login")}
               </Link>
 
               <Link
                 to="/register"
                 className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-500 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:from-purple-700 hover:to-blue-600"
               >
-                {t("navbar.register")}
+                {t("register")}
               </Link>
             </div>
           )}

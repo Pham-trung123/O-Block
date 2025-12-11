@@ -1,0 +1,9 @@
+{
+  "dashboard": "Dashboard",
+  "analyze": "Analyze Email",
+  "history": "Email History",
+  "profile": "Profile",
+  "logout": "Logout",
+  "login": "Login",
+  "register": "Register"
+}
