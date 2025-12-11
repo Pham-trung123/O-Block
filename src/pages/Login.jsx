@@ -3,8 +3,17 @@ import { FaEye, FaEyeSlash, FaUser, FaLock, FaGoogle, FaFacebook, FaGithub, FaLi
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ReCAPTCHA from "react-google-recaptcha";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function Login({ isPopup }) {
+  const [params] = useSearchParams();
+
+useEffect(() => {
+  if (params.get("reset") === "1") {
+    setStep(3); // 👉 Tự động mở giao diện đổi mật khẩu
+  }
+}, []);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -86,88 +95,91 @@ export default function Login({ isPopup }) {
   // Gửi OTP (quên mật khẩu)
   // ========================
   const handleSendOtp = async () => {
-    if (!email) return setMessage("Vui lòng nhập email trước!");
-    setLoading(true);
+  if (!email) return setMessage("Vui lòng nhập email trước!");
+  setLoading(true);
 
-    try {
-      const res = await fetch("http://localhost:3000/api/request-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+  try {
+    const res = await fetch("http://localhost:3000/api/request-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+      credentials: "include",          // ⭐ THÊM DÒNG NÀY
+    });
 
-      const data = await res.json();
-      if (data.success) {
-        setMessage("Mã OTP đã gửi đến email!");
-        setStep(2);
-      } else setMessage(data.message);
-    } catch {
-      setMessage("Lỗi gửi OTP!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const data = await res.json();
+    if (data.success) {
+      setMessage("Mã OTP đã gửi đến email!");
+      setStep(2);
+    } else setMessage(data.message);
+  } catch {
+    setMessage("Lỗi gửi OTP!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ========================
   // Xác minh OTP
   // ========================
   const handleVerifyOtp = async () => {
-    const cleanOtp = otp.replace(/\D/g, "").slice(0, 4);
+  const cleanOtp = otp.replace(/\D/g, "").slice(0, 4);
 
-    if (!cleanOtp) return setMessage("Vui lòng nhập OTP!");
-    setLoading(true);
+  if (!cleanOtp) return setMessage("Vui lòng nhập OTP!");
+  setLoading(true);
 
-    try {
-      const res = await fetch("http://localhost:3000/api/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: cleanOtp }),
-      });
+  try {
+    const res = await fetch("http://localhost:3000/api/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code: cleanOtp }),
+      credentials: "include",          // ⭐ BẮT BUỘC
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (data.success) {
-        setToken(data.token);
-        setStep(3);
-      } else setMessage(data.message);
-    } catch {
-      setMessage("Lỗi xác minh OTP!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (data.success) {
+      setToken(data.token);
+      setStep(3);
+    } else setMessage(data.message);
+  } catch {
+    setMessage("Lỗi xác minh OTP!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ========================
   // Reset Password
   // ========================
   const handleResetPassword = async () => {
-    if (!newPassword || !confirmPassword)
-      return setMessage("Vui lòng nhập đầy đủ!");
+  if (!newPassword || !confirmPassword)
+    return setMessage("Vui lòng nhập đầy đủ!");
 
-    if (newPassword !== confirmPassword)
-      return setMessage("Mật khẩu không khớp!");
+  if (newPassword !== confirmPassword)
+    return setMessage("Mật khẩu không khớp!");
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const res = await fetch("http://localhost:3000/api/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
-      });
+  try {
+    const res = await fetch("http://localhost:3000/api/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, newPassword }),
+      credentials: "include",          // ⭐ BẮT BUỘC
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (data.success) {
-        setMessage("Đổi mật khẩu thành công!");
-        setTimeout(() => setStep(1), 1200);
-      } else setMessage(data.message);
-    } catch {
-      setMessage("Lỗi kết nối server!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (data.success) {
+      setMessage("Đổi mật khẩu thành công!");
+      setTimeout(() => setStep(1), 1200);
+    } else setMessage(data.message);
+  } catch {
+    setMessage("Lỗi kết nối server!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ========================
   // Form Login (UI đẹp)

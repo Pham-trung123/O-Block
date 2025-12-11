@@ -16,13 +16,20 @@ import facebookLoginRouter from "./auth/facebookLogin.js";
 import githubLoginRouter from "./auth/githubLogin.js";
 import linkedinLoginRouter from "./auth/linkedinLogin.js";
 import axios from "axios";
+import { sendWelcomeRegisterEmail, sendLoginSecurityEmail } from "./services/mailService.js";
+
 
 // ========================
 // ENV + PATH
 // ========================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config({
+  path: path.join(process.cwd(), "server/.env"),
+});
+
+console.log(">>> EMAIL_USER =", process.env.EMAIL_USER);
+console.log(">>> EMAIL_PASS =", process.env.EMAIL_PASS);
 
 const app = express();
 
@@ -38,16 +45,16 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
-
+app.set("trust proxy", 1);
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "phishhunters_secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false,
+      secure: false,        // vì đang dùng HTTP
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "lax",      // ⭐ BẮT BUỘC: KHÔNG ĐƯỢC DÙNG "none"
       maxAge: 10 * 60 * 1000,
     },
   })
@@ -58,7 +65,7 @@ app.use(
 // ========================
 const dbConfig = {
   connectionString:
-    "Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-8LLT5HQ\\MSSQLSERVER01;Database=phisingemail;Trusted_Connection=Yes;",
+    "Driver={ODBC Driver 17 for SQL Server};Server=THANHPT09\\SQLEXPRESS03;Database=phisingemail;Trusted_Connection=Yes;",
   options: { connectionTimeout: 5000 },
 };
 
@@ -176,6 +183,9 @@ app.post("/api/register", async (req, res) => {
         VALUES (@username, @email, @password, 'user', 1, GETDATE(), GETDATE())
       `);
 
+    // ⭐ GỬI EMAIL CHÀO MỪNG
+    await sendWelcomeRegisterEmail(email, fullname);
+
     res.json({ success: true, message: "Đăng ký thành công!" });
   } catch (err) {
     console.error("❌ Lỗi /register:", err);
@@ -189,6 +199,9 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password, captchaToken } = req.body;
+
+    console.log("🔑 SECRET KEY:", process.env.RECAPTCHA_SECRET_KEY);
+    console.log("📌 Token FE gửi:", captchaToken);
 
     if (!captchaToken)
       return res.json({
@@ -205,10 +218,13 @@ app.post("/api/login", async (req, res) => {
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
+    console.log("📌 Google verify response:", verifyRes.data);
+
     if (!verifyRes.data.success)
       return res.json({
         success: false,
         message: "❌ Xác minh reCAPTCHA thất bại!",
+        googleError: verifyRes.data["error-codes"],
       });
 
     const pool = await getPool();
@@ -234,24 +250,132 @@ app.post("/api/login", async (req, res) => {
     // =======================
     req.session.user = { id: user.id, role: user.role, email: user.email };
 
+    // ⭐⭐⭐⭐⭐ THÊM Ở ĐÂY — KHÔNG ĐỤNG CODE CŨ ⭐⭐⭐⭐⭐
+    try {
+      await sendLoginSecurityEmail(
+        user.email,
+        user.username,
+        req.ip || req.connection.remoteAddress
+      );
+      console.log("📨 Email đăng nhập đã gửi!");
+    } catch (mailErr) {
+      console.error("⚠️ Lỗi gửi email đăng nhập:", mailErr);
+    }
+    // ⭐⭐⭐⭐⭐ HẾT PHẦN THÊM ⭐⭐⭐⭐⭐
+
     res.json({
       success: true,
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role, // THÊM ROLE ĐỂ ADMIN DASHBOARD HOẠT ĐỘNG
+        role: user.role,
       },
     });
+
   } catch (error) {
     console.error("❌ Lỗi /login:", error);
     res.status(500).json({ success: false });
   }
 });
 
+
 // ========================
 // REQUEST OTP
 // ========================
+app.post("/api/request-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) return res.json({ success: false, message: "Thiếu email!" });
+
+    const pool = await getPool();
+    const userCheck = await pool
+      .request()
+      .input("email", sql.VarChar, email)
+      .query("SELECT * FROM users WHERE email = @email");
+
+    if (userCheck.recordset.length === 0) {
+      return res.json({
+        success: false,
+        message: "Email không tồn tại trong hệ thống!",
+      });
+    }
+
+    // Tạo OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    console.log("🔐 OTP sinh ra:", otp);
+
+    // LƯU VÀO SESSION
+    req.session.resetOtp = otp;
+    req.session.resetEmail = email;
+    req.session.save();
+
+    console.log("📌 Session lưu OTP:", req.session.resetOtp);
+    console.log("📌 Session lưu Email:", req.session.resetEmail);
+
+    // Gửi email OTP
+    await sendMail(
+      email,
+      "Mã OTP đặt lại mật khẩu - Phish Hunters",
+      `<h2>🔐 Mã OTP của bạn: <b>${otp}</b></h2>`
+    );
+
+    res.json({ success: true, message: "Đã gửi OTP!" });
+  } catch (err) {
+    console.log("❌ Lỗi request-otp:", err);
+    res.json({ success: false, message: "Lỗi server!" });
+  }
+});
+
+app.post("/api/verify-otp", (req, res) => {
+  const { email, code } = req.body;
+
+  console.log("📩 Email client gửi:", email);
+  console.log("📤 OTP client gửi:", code);
+
+  console.log("📌 SESSION EMAIL:", req.session.resetEmail);
+  console.log("📌 SESSION OTP:", req.session.resetOtp);
+
+  if (
+    req.session.resetEmail === email &&
+    req.session.resetOtp === code
+  ) {
+    const token = crypto.randomBytes(20).toString("hex");
+    req.session.resetToken = token;
+
+    return res.json({ success: true, token });
+  }
+
+  return res.json({ success: false, message: "OTP không chính xác!" });
+});
+
+app.post("/api/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword)
+      return res.json({ success: false, message: "Thiếu dữ liệu!" });
+
+    if (token !== req.session.resetToken)
+      return res.json({ success: false, message: "Token không hợp lệ!" });
+
+    const email = req.session.resetEmail;
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    const pool = await getPool();
+    await pool
+      .request()
+      .input("email", sql.VarChar, email)
+      .input("password", sql.VarChar, hashed)
+      .query("UPDATE users SET password = @password WHERE email = @email");
+
+    res.json({ success: true, message: "Đổi mật khẩu thành công!" });
+  } catch (error) {
+    res.json({ success: false, message: "Lỗi server!" });
+  }
+});
 
 // ========================
 // AI ANALYZE EMAIL
